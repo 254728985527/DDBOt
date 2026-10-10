@@ -260,11 +260,34 @@ export const loadBlocks = (xml, drop_event, event_group, workspace) => {
     }
 };
 
+const refreshLoadedTradeDefinition = workspace => {
+    const trade_definition = workspace.getAllBlocks(true).find(block => block.type === 'trade_definition');
+    if (!trade_definition) return;
+
+    const blocks = [
+        trade_definition.getChildByType('trade_definition_market'),
+        trade_definition.getChildByType('trade_definition_tradetype'),
+        trade_definition.getChildByType('trade_definition_tradeoptions'),
+    ].filter(Boolean);
+
+    blocks.forEach(block => {
+        const event = new window.Blockly.Events.BlockCreate(block);
+        event.recordUndo = false;
+        event.group = window.Blockly.Events.getGroup();
+        window.Blockly.Events.fire(event);
+    });
+};
+
 export const loadWorkspace = async (xml, event_group, workspace) => {
     window.Blockly.Events.setGroup(event_group);
     await workspace.asyncClear();
     window.Blockly.Xml.clearWorkspaceAndLoadFromXml(xml, workspace);
     workspace.cleanUp();
+
+    // Loaded XML can arrive before active-symbols/contracts-for data is ready.
+    // Re-run the trade parameter population once immediately and once after the API cache settles.
+    refreshLoadedTradeDefinition(workspace);
+    window.setTimeout(() => refreshLoadedTradeDefinition(workspace), 250);
 };
 
 const loadBlocksFromHeader = (xml_string, block) => {
