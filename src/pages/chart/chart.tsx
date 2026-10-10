@@ -66,8 +66,8 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
         let cancelled = false;
         chart_api
             .init()
-            .then(() => {
-                if (!cancelled) setIsChartApiReady(true);
+            .then(api => {
+                if (!cancelled && api?.connection?.readyState === WebSocket.OPEN) setIsChartApiReady(true);
             })
             .catch(() => {
                 if (!cancelled) setIsChartApiReady(false);
@@ -107,9 +107,9 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
     }, [isChartApiReady, updateSymbol]);
 
     const requestAPI = async (req: ServerTimeRequest | ActiveSymbolsRequest | TradingTimesRequest) => {
-        if (!chart_api.api) await chart_api.init();
-        if (!chart_api.api) throw new Error('Chart connection is unavailable');
-        return chart_api.api.send(req);
+        const api = chart_api.api?.connection?.readyState === WebSocket.OPEN ? chart_api.api : await chart_api.init();
+        if (!api || api.connection?.readyState !== WebSocket.OPEN) throw new Error('Chart connection is unavailable');
+        return api.send(req);
     };
     const requestForgetStream = (subscription_id: string) => {
         if (!subscription_id) return;

@@ -16,7 +16,25 @@ class ChartAPI {
             this.api = await generateDerivApiInstance();
             this.api?.connection.addEventListener('close', this.onsocketclose.bind(this));
         }
+        if (this.api?.connection?.readyState === 0) {
+            await new Promise((resolve, reject) => {
+                const connection = this.api.connection;
+                const onopen = () => {
+                    connection.removeEventListener('open', onopen);
+                    connection.removeEventListener('error', onerror);
+                    resolve();
+                };
+                const onerror = () => {
+                    connection.removeEventListener('open', onopen);
+                    connection.removeEventListener('error', onerror);
+                    reject(new Error('Chart market-data connection failed'));
+                };
+                connection.addEventListener('open', onopen, { once: true });
+                connection.addEventListener('error', onerror, { once: true });
+            });
+        }
         this.getTime();
+        return this.api;
     };
 
     getTime() {
