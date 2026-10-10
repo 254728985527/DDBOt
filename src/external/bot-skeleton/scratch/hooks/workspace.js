@@ -10,7 +10,8 @@ window.Blockly.Workspace.prototype.clearUndo = function () {
     this.undoStack_.length = 0;
     this.redoStack_.length = 0;
 
-    const { toolbar } = DBotStore.instance;
+    const toolbar = DBotStore.instance?.toolbar;
+    if (!toolbar) return;
 
     toolbar.setHasRedoStack();
     toolbar.setHasUndoStack();
@@ -33,7 +34,8 @@ window.Blockly.Workspace.prototype.fireChangeListener = function (event) {
             this.undoStack_.unshift();
         }
 
-        const { toolbar } = DBotStore.instance;
+        const toolbar = DBotStore.instance?.toolbar;
+        if (!toolbar) return;
 
         toolbar.setHasRedoStack();
         toolbar.setHasUndoStack();

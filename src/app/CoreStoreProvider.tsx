@@ -94,6 +94,7 @@ const CoreStoreProvider: React.FC<{ children: React.ReactNode }> = observer(({ c
 
     useEffect(() => {
         const updateServerTime = () => {
+            if (!api_base.api || !common) return;
             api_base.api
                 .time()
                 .then((res: TSocketResponseData<'time'>) => {
@@ -200,13 +201,16 @@ const CoreStoreProvider: React.FC<{ children: React.ReactNode }> = observer(({ c
                     domain: currentDomain,
                 });
 
+            if (settingRes.get_settings?.country_code) {
                 api_base.api
                     .landingCompany({
-                        landing_company: settingRes.get_settings?.country_code,
+                        landing_company: settingRes.get_settings.country_code,
                     })
                     .then((res: TSocketResponseData<'landing_company'>) => {
                         client?.setLandingCompany(res.landing_company as unknown as TLandingCompany);
-                    });
+                    })
+                    .catch(() => undefined);
+            }
             });
 
             api_base.api.getAccountStatus().then((res: TSocketResponseData<'get_account_status'>) => {

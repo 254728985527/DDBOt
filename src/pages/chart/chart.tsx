@@ -113,7 +113,7 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
         if (!chart_store.symbol) {
             chart_store.symbol = '1HZ100V';
         }
-        updateSymbol();
+        if (chart_store.symbol) updateSymbol();
     }, [chart_store, isChartApiReady, updateSymbol]);
 
     const requestAPI = async (req: ServerTimeRequest | ActiveSymbolsRequest | TradingTimesRequest) => {

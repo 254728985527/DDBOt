@@ -504,7 +504,7 @@ export const scrollWorkspace = (workspace, scroll_amount, is_horizontal, is_chro
     let scroll_y = delta_y;
     if (is_horizontal) {
         scroll_x += is_chronological ? scroll_amount : -scroll_amount;
-        if (!DBotStore.instance.is_mobile) {
+        if (!DBotStore.instance?.is_mobile) {
             scroll_y += -20;
         }
     } else {
