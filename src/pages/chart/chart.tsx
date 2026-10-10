@@ -110,8 +110,11 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
 
     useEffect(() => {
         if (!isChartApiReady) return;
+        if (!chart_store.symbol) {
+            chart_store.symbol = '1HZ100V';
+        }
         updateSymbol();
-    }, [isChartApiReady, updateSymbol]);
+    }, [chart_store, isChartApiReady, updateSymbol]);
 
     const requestAPI = async (req: ServerTimeRequest | ActiveSymbolsRequest | TradingTimesRequest) => {
         const api = chart_api.api?.connection?.readyState === WebSocket.OPEN ? chart_api.api : await chart_api.init();

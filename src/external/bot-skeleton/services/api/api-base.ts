@@ -131,7 +131,8 @@ class APIBase {
             await this.authorizeAndSubscribe();
         }
 
-        chart_api.init(force_create_connection);
+        await chart_api.init(force_create_connection);
+        return this.api;
     }
 
     getConnectionStatus() {

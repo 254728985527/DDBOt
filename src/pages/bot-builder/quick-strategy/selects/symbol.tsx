@@ -54,20 +54,32 @@ const SymbolSelect: React.FC = () => {
     );
 
     useEffect(() => {
-        const { active_symbols } =
-            (ApiHelpers?.instance as unknown as {
-                active_symbols: {
-                    getSymbolsForBot: () => TSymbol[];
-                };
-            }) ?? {};
-        const symbols = active_symbols?.getSymbolsForBot?.();
-        setActiveSymbols(symbols);
+        let cancelled = false;
+        let retry_timer: ReturnType<typeof setTimeout> | undefined;
+        const loadSymbols = async () => {
+            const helper = ApiHelpers?.instance?.active_symbols as unknown as
+                | {
+                      retrieveActiveSymbols?: () => Promise<unknown>;
+                      getSymbolsForBot?: () => TSymbol[];
+                  }
+                | undefined;
+            await helper?.retrieveActiveSymbols?.();
+            const loaded_symbols = helper?.getSymbolsForBot?.() ?? [];
+            if (cancelled) return;
+            setActiveSymbols(loaded_symbols);
 
-        const has_symbol = !!symbols?.find(symbol => symbol?.value === values?.symbol);
-        if (!has_symbol) {
-            setFieldValue('symbol', symbols?.[0]?.value);
-            setValue('symbol', symbols?.[0]?.value);
-        }
+            const has_symbol = loaded_symbols.some(symbol => symbol?.value === values?.symbol);
+            if (!has_symbol && loaded_symbols[0]?.value) {
+                setFieldValue('symbol', loaded_symbols[0].value);
+                setValue('symbol', loaded_symbols[0].value);
+            }
+            if (!loaded_symbols.length) retry_timer = window.setTimeout(loadSymbols, 1000);
+        };
+        loadSymbols();
+        return () => {
+            cancelled = true;
+            if (retry_timer) window.clearTimeout(retry_timer);
+        };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 

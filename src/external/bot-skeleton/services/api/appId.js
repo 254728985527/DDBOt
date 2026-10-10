@@ -1,5 +1,6 @@
 import { getAppId } from '@/components/shared';
 import DerivAPIBasic from '@deriv/deriv-api/dist/DerivAPIBasic';
+import APIMiddleware from './api-middleware';
 
 // The legacy Deriv API client used by SmartChart and Bot Builder requires the
 // documented WebSocket protocol; the /trading/v1/options/ws/public endpoint
