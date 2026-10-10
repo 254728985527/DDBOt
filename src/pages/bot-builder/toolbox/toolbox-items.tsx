@@ -384,6 +384,8 @@ export const ToolboxItems = () => {
                     </Block>
                 </Category>
 
+                <Category id='botz' name={localize('Botz')} />
+
                 <Category name={localize('Tick and candle analysis')} id='tick_analysis'>
                     <Block type='tick_analysis' />
                     <Block type='tick' />

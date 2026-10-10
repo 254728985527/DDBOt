@@ -8,6 +8,7 @@ import { localize } from '@deriv-com/translations';
 import { useDevice } from '@deriv-com/ui';
 import { rudderStackSendOpenEvent } from '../../../analytics/rudderstack-common-events';
 import ToolbarButton from '../toolbar/toolbar-button';
+import BotzLibrary from './botz-library';
 import SearchBox from './search-box';
 import { ToolboxItems } from './toolbox-items';
 
@@ -34,6 +35,7 @@ const Toolbox = observer(() => {
 
     const toolbox_ref = React.useRef(ToolboxItems());
     const [is_open, setOpen] = React.useState(true);
+    const [is_botz_open, setBotzOpen] = React.useState(false);
 
     React.useEffect(() => {
         onMount(toolbox_ref);
@@ -110,9 +112,11 @@ const Toolbox = observer(() => {
                                                     className='db-toolbox__item'
                                                     onClick={() => {
                                                         // eslint-disable-next-line no-unused-expressions
-                                                        has_sub_category
-                                                            ? onToolboxItemExpand(index)
-                                                            : onToolboxItemClick(category);
+                                                        category.getAttribute('id') === 'botz'
+                                                            ? setBotzOpen(true)
+                                                            : has_sub_category
+                                                              ? onToolboxItemExpand(index)
+                                                              : onToolboxItemClick(category);
                                                     }}
                                                 >
                                                     <div className='db-toolbox__category-text'>
@@ -168,6 +172,7 @@ const Toolbox = observer(() => {
                         </div>
                     </div>
                 </div>
+                {is_botz_open && <BotzLibrary onClose={() => setBotzOpen(false)} />}
             </div>
         );
     }

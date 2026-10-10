@@ -1,0 +1,714 @@
+<xml xmlns="https://developers.google.com/blockly/xml" is_dbot="true" collection="false">
+  <variables>
+    <variable id="PredictionVar001">Prediction</variable>
+    <variable id="ContractTypeVar001">ContractType</variable>
+    <variable id="StakeVar001">Stake</variable>
+    <variable id="TargetDigitVar001">Target Digit</variable>
+    <variable id="LD1Var">LD1</variable>
+    <variable id="WinStakeVar001">Win Stake</variable>
+    <variable id="TargetPctVar001">Target Pct</variable>
+    <variable id="LD2Var">LD2</variable>
+    <variable id="PctOpVar001">Pct Operator</variable>
+    <variable id="LD3Var">LD3</variable>
+    <variable id="ExpectedProfitVar">Expected Profit</variable>
+    <variable id="LD4Var">LD4</variable>
+    <variable id="CountTargetVar">CountTarget</variable>
+    <variable id="LoopIndexVar">i</variable>
+    <variable id="IsManipulatedVar">IsManipulated</variable>
+    <variable id="PctTargetVar">PctTarget</variable>
+    <variable id="ManualCompOpVar">Manual Comp Operator</variable>
+    <variable id="LogTextVar">text</variable>
+    <variable id="ManualCompDigitVar">Manual Comp Digit</variable>
+  </variables>
+  <block type="trade_definition" id="trade_def_main" deletable="false" x="0" y="0">
+    <statement name="TRADE_OPTIONS">
+      <block type="trade_definition_market" id="trade_market" deletable="false" movable="false">
+        <field name="MARKET_LIST">synthetic_index</field>
+        <field name="SUBMARKET_LIST">random_index</field>
+        <field name="SYMBOL_LIST">R_100</field>
+        <next>
+          <block type="trade_definition_tradetype" id="trade_tradetype" deletable="false" movable="false">
+            <field name="TRADETYPECAT_LIST">digits</field>
+            <field name="TRADETYPE_LIST">overunder</field>
+            <next>
+              <block type="trade_definition_contracttype" id="trade_contracttype" deletable="false" movable="false">
+                <field name="TYPE_LIST">both</field>
+                <next>
+                  <block type="trade_definition_candleinterval" id="trade_interval" deletable="false" movable="false">
+                    <field name="CANDLEINTERVAL_LIST">60</field>
+                    <next>
+                      <block type="trade_definition_restartbuysell" id="trade_restart" deletable="false" movable="false">
+                        <field name="TIME_MACHINE_ENABLED">FALSE</field>
+                        <next>
+                          <block type="trade_definition_restartonerror" id="trade_error" deletable="false" movable="false">
+                            <field name="RESTARTONERROR">TRUE</field>
+                          </block>
+                        </next>
+                      </block>
+                    </next>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </next>
+      </block>
+    </statement>
+    <statement name="INITIALIZATION">
+      <block type="variables_set" id="set_v_pred">
+        <field name="VAR" id="PredictionVar001">Prediction</field>
+        <value name="VALUE">
+          <block type="math_number" id="num_v_pred">
+            <field name="NUM">2</field>
+          </block>
+        </value>
+        <next>
+          <block type="variables_set" id="set_v_contract">
+            <field name="VAR" id="ContractTypeVar001">ContractType</field>
+            <value name="VALUE">
+              <block type="text" id="txt_v_over">
+                <field name="TEXT">OVER</field>
+              </block>
+            </value>
+            <next>
+              <block type="variables_set" id="set_v_tdig">
+                <field name="VAR" id="TargetDigitVar001">Target Digit</field>
+                <value name="VALUE">
+                  <block type="math_number" id="num_v_tdig">
+                    <field name="NUM">0</field>
+                  </block>
+                </value>
+                <next>
+                  <block type="variables_set" id="set_v_tpct">
+                    <field name="VAR" id="TargetPctVar001">Target Pct</field>
+                    <value name="VALUE">
+                      <block type="math_number" id="num_v_tpct">
+                        <field name="NUM">7</field>
+                      </block>
+                    </value>
+                    <next>
+                      <block type="variables_set" id="set_v_pop">
+                        <field name="VAR" id="PctOpVar001">Pct Operator</field>
+                        <value name="VALUE">
+                          <block type="text" id="txt_v_pop">
+                            <field name="TEXT">EQUAL</field>
+                          </block>
+                        </value>
+                        <next>
+                          <block type="variables_set" id="set_v_stake">
+                            <field name="VAR" id="StakeVar001">Stake</field>
+                            <value name="VALUE">
+                              <block type="math_number" id="num_v_stake">
+                                <field name="NUM">0.5</field>
+                              </block>
+                            </value>
+                            <next>
+                              <block type="variables_set" id="set_v_wstake">
+                                <field name="VAR" id="WinStakeVar001">Win Stake</field>
+                                <value name="VALUE">
+                                  <block type="variables_get" id="get_v_stake">
+                                    <field name="VAR" id="StakeVar001">Stake</field>
+                                  </block>
+                                </value>
+                                <next>
+                                  <block type="variables_set" id="set_v_profit">
+                                    <field name="VAR" id="ExpectedProfitVar">Expected Profit</field>
+                                    <value name="VALUE">
+                                      <block type="math_number" id="num_v_profit">
+                                        <field name="NUM">10</field>
+                                      </block>
+                                    </value>
+                                    <next>
+                                      <block type="variables_set" id="set_v_manip">
+                                        <field name="VAR" id="IsManipulatedVar">IsManipulated</field>
+                                        <value name="VALUE">
+                                          <block type="logic_boolean" id="bool_v_false">
+                                            <field name="BOOL">FALSE</field>
+                                          </block>
+                                        </value>
+                                        <next>
+                                          <block type="variables_set" id="set_v_mop">
+                                            <field name="VAR" id="ManualCompOpVar">Manual Comp Operator</field>
+                                            <value name="VALUE">
+                                              <block type="text" id="txt_v_mop">
+                                                <field name="TEXT">GREATER</field>
+                                              </block>
+                                            </value>
+                                            <next>
+                                              <block type="variables_set" id="set_v_mdigit">
+                                                <field name="VAR" id="ManualCompDigitVar">Manual Comp Digit</field>
+                                                <value name="VALUE">
+                                                  <block type="math_number" id="num_v_mdigit">
+                                                    <field name="NUM">4</field>
+                                                  </block>
+                                                </value>
+                                              </block>
+                                            </next>
+                                          </block>
+                                        </next>
+                                      </block>
+                                    </next>
+                                  </block>
+                                </next>
+                              </block>
+                            </next>
+                          </block>
+                        </next>
+                      </block>
+                    </next>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </next>
+      </block>
+    </statement>
+    <statement name="SUBMARKET">
+      <block type="controls_repeat_ext" id="loop_repeat_main" collapsed="true">
+        <value name="TIMES">
+          <block type="math_constant" id="math_const_inf">
+            <field name="CONSTANT">INFINITY</field>
+          </block>
+        </value>
+        <statement name="DO">
+          <block type="timeout" id="timeout_block">
+            <statement name="TIMEOUTSTACK">
+              <block type="variables_set" id="set_ld1_val">
+                <field name="VAR" id="LD1Var">LD1</field>
+                <value name="VALUE">
+                  <block type="lists_getIndex" id="get_l1">
+                    <mutation xmlns="http://www.w3.org/1999/xhtml" statement="false" at="true"></mutation>
+                    <field name="MODE">GET</field>
+                    <field name="WHERE">FROM_END</field>
+                    <value name="VALUE">
+                      <block type="lastDigitList" id="list_dig1"></block>
+                    </value>
+                    <value name="AT">
+                      <block type="math_number" id="at_n1">
+                        <field name="NUM">1</field>
+                      </block>
+                    </value>
+                  </block>
+                </value>
+                <next>
+                  <block type="variables_set" id="set_ld2_val">
+                    <field name="VAR" id="LD2Var">LD2</field>
+                    <value name="VALUE">
+                      <block type="lists_getIndex" id="get_l2">
+                        <mutation xmlns="http://www.w3.org/1999/xhtml" statement="false" at="true"></mutation>
+                        <field name="MODE">GET</field>
+                        <field name="WHERE">FROM_END</field>
+                        <value name="VALUE">
+                          <block type="lastDigitList" id="list_dig2"></block>
+                        </value>
+                        <value name="AT">
+                          <block type="math_number" id="at_n2">
+                            <field name="NUM">2</field>
+                          </block>
+                        </value>
+                      </block>
+                    </value>
+                    <next>
+                      <block type="variables_set" id="set_ld3_val">
+                        <field name="VAR" id="LD3Var">LD3</field>
+                        <value name="VALUE">
+                          <block type="lists_getIndex" id="get_l3">
+                            <mutation xmlns="http://www.w3.org/1999/xhtml" statement="false" at="true"></mutation>
+                            <field name="MODE">GET</field>
+                            <field name="WHERE">FROM_END</field>
+                            <value name="VALUE">
+                              <block type="lastDigitList" id="list_dig3"></block>
+                            </value>
+                            <value name="AT">
+                              <block type="math_number" id="at_n3">
+                                <field name="NUM">3</field>
+                              </block>
+                            </value>
+                          </block>
+                        </value>
+                        <next>
+                          <block type="variables_set" id="set_ld4_val">
+                            <field name="VAR" id="LD4Var">LD4</field>
+                            <value name="VALUE">
+                              <block type="lists_getIndex" id="get_l4">
+                                <mutation xmlns="http://www.w3.org/1999/xhtml" statement="false" at="true"></mutation>
+                                <field name="MODE">GET</field>
+                                <field name="WHERE">FROM_END</field>
+                                <value name="VALUE">
+                                  <block type="lastDigitList" id="list_dig4"></block>
+                                </value>
+                                <value name="AT">
+                                  <block type="math_number" id="at_n4">
+                                    <field name="NUM">4</field>
+                                  </block>
+                                </value>
+                              </block>
+                            </value>
+                            <next>
+                              <block type="variables_set" id="set_cnt_zero">
+                                <field name="VAR" id="CountTargetVar">CountTarget</field>
+                                <value name="VALUE">
+                                  <block type="math_number" id="num_zero_val">
+                                    <field name="NUM">0</field>
+                                  </block>
+                                </value>
+                                <next>
+                                  <block type="controls_for" id="for_loop_pct">
+                                    <field name="VAR" id="LoopIndexVar">i</field>
+                                    <value name="FROM">
+                                      <block type="math_number" id="f_1">
+                                        <field name="NUM">1</field>
+                                      </block>
+                                    </value>
+                                    <value name="TO">
+                                      <block type="math_number" id="t_100">
+                                        <field name="NUM">100</field>
+                                      </block>
+                                    </value>
+                                    <value name="BY">
+                                      <block type="math_number" id="b_1">
+                                        <field name="NUM">1</field>
+                                      </block>
+                                    </value>
+                                    <statement name="DO">
+                                      <block type="controls_if" id="if_match_target">
+                                        <value name="IF0">
+                                          <block type="logic_compare" id="cmp_target_eq">
+                                            <field name="OP">EQ</field>
+                                            <value name="A">
+                                              <block type="lists_getIndex" id="get_loop_idx">
+                                                <mutation xmlns="http://www.w3.org/1999/xhtml" statement="false" at="true"></mutation>
+                                                <field name="MODE">GET</field>
+                                                <field name="WHERE">FROM_END</field>
+                                                <value name="VALUE">
+                                                  <block type="lastDigitList" id="list_loop_dig"></block>
+                                                </value>
+                                                <value name="AT">
+                                                  <block type="variables_get" id="get_loop_i">
+                                                    <field name="VAR" id="LoopIndexVar">i</field>
+                                                  </block>
+                                                </value>
+                                              </block>
+                                            </value>
+                                            <value name="B">
+                                              <block type="variables_get" id="get_target_dig_val">
+                                                <field name="VAR" id="TargetDigitVar001">Target Digit</field>
+                                              </block>
+                                            </value>
+                                          </block>
+                                        </value>
+                                        <statement name="DO0">
+                                          <block type="variables_set" id="inc_count">
+                                            <field name="VAR" id="CountTargetVar">CountTarget</field>
+                                            <value name="VALUE">
+                                              <block type="math_arithmetic" id="math_add_1">
+                                                <field name="OP">ADD</field>
+                                                <value name="A">
+                                                  <block type="variables_get" id="get_c_target">
+                                                    <field name="VAR" id="CountTargetVar">CountTarget</field>
+                                                  </block>
+                                                </value>
+                                                <value name="B">
+                                                  <block type="math_number" id="num_1_val">
+                                                    <field name="NUM">1</field>
+                                                  </block>
+                                                </value>
+                                              </block>
+                                            </value>
+                                          </block>
+                                        </statement>
+                                      </block>
+                                    </statement>
+                                    <next>
+                                      <block type="variables_set" id="set_pct_target_val">
+                                        <field name="VAR" id="PctTargetVar">PctTarget</field>
+                                        <value name="VALUE">
+                                          <block type="variables_get" id="get_final_count">
+                                            <field name="VAR" id="CountTargetVar">CountTarget</field>
+                                          </block>
+                                        </value>
+                                        <next>
+                                          <block type="text_join" id="txt_join_msg">
+                                            <field name="VARIABLE" id="LogTextVar">text</field>
+                                            <statement name="STACK">
+                                              <block type="text_statement" id="t_stat_1">
+                                                <value name="TEXT">
+                                                  <block type="text" id="t_prefix">
+                                                    <field name="TEXT">[Analyzing Market] Digits = </field>
+                                                  </block>
+                                                </value>
+                                                <next>
+                                                  <block type="text_statement" id="t_stat_2">
+                                                    <value name="TEXT">
+                                                      <block type="variables_get" id="g_ld1">
+                                                        <field name="VAR" id="LD1Var">LD1</field>
+                                                      </block>
+                                                    </value>
+                                                    <next>
+                                                      <block type="text_statement" id="t_stat_3">
+                                                        <value name="TEXT">
+                                                          <block type="text" id="t_mid">
+                                                            <field name="TEXT"> - Pct: </field>
+                                                          </block>
+                                                        </value>
+                                                        <next>
+                                                          <block type="text_statement" id="t_stat_4">
+                                                            <value name="TEXT">
+                                                              <block type="variables_get" id="g_pct">
+                                                                <field name="VAR" id="PctTargetVar">PctTarget</field>
+                                                              </block>
+                                                            </value>
+                                                            <next>
+                                                              <block type="text_statement" id="t_stat_5">
+                                                                <value name="TEXT">
+                                                                  <block type="text" id="t_suffix">
+                                                                    <field name="TEXT">%</field>
+                                                                  </block>
+                                                                </value>
+                                                              </block>
+                                                            </next>
+                                                          </block>
+                                                        </next>
+                                                      </block>
+                                                    </next>
+                                                  </block>
+                                                </next>
+                                              </block>
+                                            </statement>
+                                            <next>
+                                              <block type="notify" id="notify_analysis">
+                                                <field name="NOTIFICATION_TYPE">info</field>
+                                                <field name="NOTIFICATION_SOUND">silent</field>
+                                                <value name="MESSAGE">
+                                                  <block type="variables_get" id="get_log_text">
+                                                    <field name="VAR" id="LogTextVar">text</field>
+                                                  </block>
+                                                </value>
+                                                <next>
+                                                  <block type="controls_if" id="if_entry_filters">
+                                                    <mutation xmlns="http://www.w3.org/1999/xhtml" else="1"></mutation>
+                                                    <value name="IF0">
+                                                      <block type="logic_operation" id="op_and_all_conditions">
+                                                        <field name="OP">AND</field>
+                                                        <value name="A">
+                                                          <block type="logic_operation" id="op_and_target_pct">
+                                                            <field name="OP">AND</field>
+                                                            <value name="A">
+                                                              <block type="logic_compare" id="cmp_ld1_target_eq">
+                                                                <field name="OP">EQ</field>
+                                                                <value name="A">
+                                                                  <block type="variables_get" id="g_chk_ld1">
+                                                                    <field name="VAR" id="LD1Var">LD1</field>
+                                                                  </block>
+                                                                </value>
+                                                                <value name="B">
+                                                                  <block type="variables_get" id="g_chk_tdig">
+                                                                    <field name="VAR" id="TargetDigitVar001">Target Digit</field>
+                                                                  </block>
+                                                                </value>
+                                                              </block>
+                                                            </value>
+                                                            <value name="B">
+                                                              <block type="logic_compare" id="cmp_pct_exact_7">
+                                                                <field name="OP">LE</field>
+                                                                <value name="A">
+                                                                  <block type="variables_get" id="g_chk_pct">
+                                                                    <field name="VAR" id="PctTargetVar">PctTarget</field>
+                                                                  </block>
+                                                                </value>
+                                                                <value name="B">
+                                                                  <block type="variables_get" id="g_chk_tpct">
+                                                                    <field name="VAR" id="TargetPctVar001">Target Pct</field>
+                                                                  </block>
+                                                                </value>
+                                                              </block>
+                                                            </value>
+                                                          </block>
+                                                        </value>
+                                                        <value name="B">
+                                                          <block type="logic_operation" id="op_and_3digits_gt2">
+                                                            <field name="OP">AND</field>
+                                                            <value name="A">
+                                                              <block type="logic_operation" id="op_ld1_ld2_gt2">
+                                                                <field name="OP">AND</field>
+                                                                <value name="A">
+                                                                  <block type="logic_compare" id="cmp_l1_gt_2">
+                                                                    <field name="OP">GT</field>
+                                                                    <value name="A">
+                                                                      <block type="variables_get" id="g_l1_val">
+                                                                        <field name="VAR" id="LD1Var">LD1</field>
+                                                                      </block>
+                                                                    </value>
+                                                                    <value name="B">
+                                                                      <block type="math_number" id="num_2_1">
+                                                                        <field name="NUM">2</field>
+                                                                      </block>
+                                                                    </value>
+                                                                  </block>
+                                                                </value>
+                                                                <value name="B">
+                                                                  <block type="logic_compare" id="cmp_l2_gt_2">
+                                                                    <field name="OP">GT</field>
+                                                                    <value name="A">
+                                                                      <block type="variables_get" id="g_l2_val">
+                                                                        <field name="VAR" id="LD2Var">LD2</field>
+                                                                      </block>
+                                                                    </value>
+                                                                    <value name="B">
+                                                                      <block type="math_number" id="num_2_2">
+                                                                        <field name="NUM">2</field>
+                                                                      </block>
+                                                                    </value>
+                                                                  </block>
+                                                                </value>
+                                                              </block>
+                                                            </value>
+                                                            <value name="B">
+                                                              <block type="logic_operation" id="op_and_manual_comp">
+                                                                <field name="OP">AND</field>
+                                                                <value name="A">
+                                                                  <block type="logic_compare" id="cmp_l3_gt_2">
+                                                                    <field name="OP">GT</field>
+                                                                    <value name="A">
+                                                                      <block type="variables_get" id="g_l3_val">
+                                                                        <field name="VAR" id="LD3Var">LD3</field>
+                                                                      </block>
+                                                                    </value>
+                                                                    <value name="B">
+                                                                      <block type="math_number" id="num_2_3">
+                                                                        <field name="NUM">2</field>
+                                                                      </block>
+                                                                    </value>
+                                                                  </block>
+                                                                </value>
+                                                                <value name="B">
+                                                                  <block type="logic_compare" id="cmp_manual_gt_4">
+                                                                    <field name="OP">GT</field>
+                                                                    <value name="A">
+                                                                      <block type="variables_get" id="g_m_ld1">
+                                                                        <field name="VAR" id="LD1Var">LD1</field>
+                                                                      </block>
+                                                                    </value>
+                                                                    <value name="B">
+                                                                      <block type="variables_get" id="g_m_digit">
+                                                                        <field name="VAR" id="ManualCompDigitVar">Manual Comp Digit</field>
+                                                                      </block>
+                                                                    </value>
+                                                                  </block>
+                                                                </value>
+                                                              </block>
+                                                            </value>
+                                                          </block>
+                                                        </value>
+                                                      </block>
+                                                    </value>
+                                                    <statement name="DO0">
+                                                      <block type="controls_flow_statements" id="flow_break">
+                                                        <field name="FLOW">BREAK</field>
+                                                      </block>
+                                                    </statement>
+                                                    <statement name="ELSE">
+                                                      <block type="controls_flow_statements" id="flow_continue">
+                                                        <field name="FLOW">CONTINUE</field>
+                                                      </block>
+                                                    </statement>
+                                                  </block>
+                                                </next>
+                                              </block>
+                                            </next>
+                                          </block>
+                                        </next>
+                                      </block>
+                                    </next>
+                                  </block>
+                                </next>
+                              </block>
+                            </next>
+                          </block>
+                        </next>
+                      </block>
+                    </next>
+                  </block>
+                </next>
+              </block>
+            </statement>
+            <value name="SECONDS">
+              <shadow type="math_number" id="timeout_sec">
+                <field name="NUM">2</field>
+              </shadow>
+            </value>
+          </block>
+        </statement>
+        <next>
+          <block type="trade_definition_tradeoptions" id="trade_options_def">
+            <mutation xmlns="http://www.w3.org/1999/xhtml" has_first_barrier="false" has_second_barrier="false" has_prediction="true"></mutation>
+            <field name="DURATIONTYPE_LIST">t</field>
+            <value name="DURATION">
+              <block type="math_number" id="num_dur">
+                <field name="NUM">1</field>
+              </block>
+            </value>
+            <value name="AMOUNT">
+              <block type="variables_get" id="get_bet_stake">
+                <field name="VAR" id="StakeVar001">Stake</field>
+              </block>
+            </value>
+            <value name="PREDICTION">
+              <shadow type="math_number_positive" id="num_pos_pred">
+                <field name="NUM">1</field>
+              </shadow>
+              <block type="variables_get" id="get_pred_var">
+                <field name="VAR" id="PredictionVar001">Prediction</field>
+              </block>
+            </value>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+  <block type="after_purchase" id="after_purchase_main" x="714" y="0">
+    <statement name="AFTERPURCHASE_STACK">
+      <block type="controls_if" id="if_result_win">
+        <mutation xmlns="http://www.w3.org/1999/xhtml" else="1"></mutation>
+        <value name="IF0">
+          <block type="contract_check_result" id="chk_win_res">
+            <field name="CHECK_RESULT">win</field>
+          </block>
+        </value>
+        <statement name="DO0">
+          <block type="variables_set" id="set_stake_win">
+            <field name="VAR" id="StakeVar001">Stake</field>
+            <value name="VALUE">
+              <block type="variables_get" id="get_wstake">
+                <field name="VAR" id="WinStakeVar001">Win Stake</field>
+              </block>
+            </value>
+          </block>
+        </statement>
+        <statement name="ELSE">
+          <block type="variables_set" id="set_stake_loss">
+            <field name="VAR" id="StakeVar001">Stake</field>
+            <value name="VALUE">
+              <block type="math_arithmetic" id="math_martingale">
+                <field name="OP">MULTIPLY</field>
+                <value name="A">
+                  <block type="variables_get" id="get_curr_stake">
+                    <field name="VAR" id="StakeVar001">Stake</field>
+                  </block>
+                </value>
+                <value name="B">
+                  <shadow type="math_number" id="num_mult_val">
+                    <field name="NUM">2.1</field>
+                  </shadow>
+                </value>
+              </block>
+            </value>
+          </block>
+        </statement>
+        <next>
+          <block type="controls_if" id="if_toggle_contract">
+            <mutation xmlns="http://www.w3.org/1999/xhtml" else="1"></mutation>
+            <value name="IF0">
+              <block type="logic_compare" id="cmp_is_over">
+                <field name="OP">EQ</field>
+                <value name="A">
+                  <block type="variables_get" id="get_c_type">
+                    <field name="VAR" id="ContractTypeVar001">ContractType</field>
+                  </block>
+                </value>
+                <value name="B">
+                  <block type="text" id="txt_over_val">
+                    <field name="TEXT">OVER</field>
+                  </block>
+                </value>
+              </block>
+            </value>
+            <statement name="DO0">
+              <block type="variables_set" id="set_c_under">
+                <field name="VAR" id="ContractTypeVar001">ContractType</field>
+                <value name="VALUE">
+                  <block type="text" id="txt_under_val">
+                    <field name="TEXT">UNDER</field>
+                  </block>
+                </value>
+              </block>
+            </statement>
+            <statement name="ELSE">
+              <block type="variables_set" id="set_c_over">
+                <field name="VAR" id="ContractTypeVar001">ContractType</field>
+                <value name="VALUE">
+                  <block type="text" id="txt_over_val2">
+                    <field name="TEXT">OVER</field>
+                  </block>
+                </value>
+              </block>
+            </statement>
+            <next>
+              <block type="controls_if" id="if_check_profit">
+                <mutation xmlns="http://www.w3.org/1999/xhtml" else="1"></mutation>
+                <value name="IF0">
+                  <block type="logic_compare" id="cmp_profit_lt">
+                    <field name="OP">LT</field>
+                    <value name="A">
+                      <block type="total_profit" id="get_tot_profit"></block>
+                    </value>
+                    <value name="B">
+                      <block type="variables_get" id="get_exp_profit">
+                        <field name="VAR" id="ExpectedProfitVar">Expected Profit</field>
+                      </block>
+                    </value>
+                  </block>
+                </value>
+                <statement name="DO0">
+                  <block type="trade_again" id="action_trade_again"></block>
+                </statement>
+                <statement name="ELSE">
+                  <block type="text_print" id="print_stop_msg">
+                    <value name="TEXT">
+                      <block type="text" id="txt_stopped_msg">
+                        <field name="TEXT">! Target Profit Reached and Bot Stopped Successfully !</field>
+                      </block>
+                    </value>
+                  </block>
+                </statement>
+              </block>
+            </next>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+  <block type="before_purchase" id="before_purchase_main" deletable="false" x="0" y="1165">
+    <statement name="BEFOREPURCHASE_STACK">
+      <block type="controls_if" id="if_buy_contract_type">
+        <mutation xmlns="http://www.w3.org/1999/xhtml" else="1"></mutation>
+        <value name="IF0">
+          <block type="logic_compare" id="cmp_buy_over">
+            <field name="OP">EQ</field>
+            <value name="A">
+              <block type="variables_get" id="get_buy_ctype">
+                <field name="VAR" id="ContractTypeVar001">ContractType</field>
+              </block>
+            </value>
+            <value name="B">
+              <block type="text" id="txt_buy_over">
+                <field name="TEXT">OVER</field>
+              </block>
+            </value>
+          </block>
+        </value>
+        <statement name="DO0">
+          <block type="purchase" id="purchase_digit_over">
+            <field name="PURCHASE_LIST">DIGITOVER</field>
+          </block>
+        </statement>
+        <statement name="ELSE">
+          <block type="purchase" id="purchase_digit_under">
+            <field name="PURCHASE_LIST">DIGITOVER</field>
+          </block>
+        </statement>
+      </block>
+    </statement>
+  </block>
+</xml>
