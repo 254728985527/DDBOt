@@ -79,7 +79,8 @@ const BotzLibrary = ({ onClose = () => undefined, embedded = false }: BotzLibrar
     const [message, setMessage] = React.useState('');
 
     const sanitizeXmlForWorkspace = (xml_text: string) => {
-        const xml_dom = window.Blockly.Xml.textToDom(xml_text);
+        const xml_dom = new DOMParser().parseFromString(xml_text, 'application/xml');
+        if (xml_dom.querySelector('parsererror')) throw new Error('This bot contains invalid XML');
         const removed_types = new Set<string>();
         xml_dom.querySelectorAll('block').forEach(block => {
             const type = block.getAttribute('type');
@@ -89,7 +90,7 @@ const BotzLibrary = ({ onClose = () => undefined, embedded = false }: BotzLibrar
             }
         });
         return {
-            xml_text: window.Blockly.Xml.domToText(xml_dom),
+            xml_text: new XMLSerializer().serializeToString(xml_dom),
             removed_types: [...removed_types],
         };
     };
