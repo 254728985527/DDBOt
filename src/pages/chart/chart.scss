@@ -1,5 +1,18 @@
 @use 'components/shared/styles/mixins' as *;
 
+.dashboard__chart-wrapper {
+    position: relative;
+    width: 100%;
+    height: calc(100vh - 5.2rem);
+    min-height: 32rem;
+    overflow: hidden;
+    background: #fff;
+
+    .smartcharts {
+        height: 100%;
+    }
+}
+
 .bot {
     &__chart-container {
         position: relative;
