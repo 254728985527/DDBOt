@@ -107,7 +107,12 @@ export const AuthWrapper = () => {
         const initializeAuth = async () => {
             try {
                 // Pass isOnline to setLocalStorageToken to handle offline mode properly
-                await setLocalStorageToken(loginInfo, paramsToDelete, setIsAuthComplete, isOnline);
+                await Promise.race([
+                    setLocalStorageToken(loginInfo, paramsToDelete, setIsAuthComplete, isOnline),
+                    new Promise<void>((_, reject) =>
+                        setTimeout(() => reject(new Error('Authentication initialization timed out')), 10000)
+                    ),
+                ]);
                 URLUtils.filterSearchParams(['lang']);
                 setIsAuthComplete(true);
             } catch (error) {

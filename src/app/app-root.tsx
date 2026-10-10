@@ -46,7 +46,10 @@ const AppRoot = () => {
     useEffect(() => {
         const checkTmbStatus = async () => {
             try {
-                const tmb_status = await isTmbEnabled();
+                const tmb_status = await Promise.race([
+                    isTmbEnabled(),
+                    new Promise<boolean>(resolve => setTimeout(() => resolve(false), 3000)),
+                ]);
                 const final_status = tmb_status || window.is_tmb_enabled === true;
 
                 setIsTmbEnabled(final_status);
@@ -59,6 +62,12 @@ const AppRoot = () => {
         };
 
         checkTmbStatus();
+    }, []);
+
+    // Never let optional authentication or API setup block the application shell.
+    useEffect(() => {
+        const fallbackId = setTimeout(() => setIsApiInitialized(true), 8000);
+        return () => clearTimeout(fallbackId);
     }, []);
 
     // Initialize API when TMB check is complete with timeout fallback
@@ -76,7 +85,12 @@ const AppRoot = () => {
         const initializeApi = async () => {
             if (!api_base_initialized.current) {
                 try {
-                    await api_base.init();
+                    await Promise.race([
+                        api_base.init(),
+                        new Promise<void>((_, reject) =>
+                            setTimeout(() => reject(new Error('API initialization timed out')), 5000)
+                        ),
+                    ]);
                     api_base_initialized.current = true;
                 } catch (error) {
                     console.error('API initialization failed:', error);

@@ -203,14 +203,15 @@ const AppContent = observer(() => {
                 return;
             }
 
-            active_symbols
-                .retrieveActiveSymbols(true)
-                .then(() => {
-                    setIsLoading(false);
-                })
+            const timeout = new Promise((_, reject) => {
+                setTimeout(() => reject(new Error('Active symbols request timed out')), 10000);
+            });
+
+            Promise.race([active_symbols.retrieveActiveSymbols(true), timeout])
                 .catch(error => {
                     console.error('[API] Failed to retrieve active symbols:', error);
-                    // Don't stay in loading state if API fails
+                })
+                .finally(() => {
                     setIsLoading(false);
                 });
         };
@@ -261,6 +262,17 @@ const AppContent = observer(() => {
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [client.is_landing_company_loaded, is_api_initialized, client.loginid]);
+
+    React.useEffect(() => {
+        if (!is_api_initialized || !is_loading) return;
+
+        const timeout = setTimeout(() => {
+            console.warn('[App] Initialization timed out; showing the dashboard shell.');
+            setIsLoading(false);
+        }, 10000);
+
+        return () => clearTimeout(timeout);
+    }, [is_api_initialized, is_loading]);
 
     useEffect(() => {
         initDatadog(true);
