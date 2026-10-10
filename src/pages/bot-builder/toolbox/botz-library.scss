@@ -3,9 +3,16 @@
     inset: 0 0 0 15.6rem;
     z-index: 20;
     overflow: auto;
-    padding: 1.5rem;
-    background: var(--general-main-1, #f7f9fb);
-    color: var(--text-general, #1f2937);
+    padding: 2.1rem 2.4rem 2.5rem;
+    background: #f4f7fa;
+    color: #122235;
+}
+
+.botz-library--embedded {
+    position: relative;
+    inset: auto;
+    z-index: auto;
+    min-height: 100%;
 }
 
 .botz-library__header {
@@ -13,8 +20,12 @@
     justify-content: space-between;
     gap: 1rem;
     align-items: flex-start;
-    max-width: 68rem;
-    margin: 0 auto 1.25rem;
+    max-width: 74rem;
+    margin: 0 auto 1.6rem;
+}
+
+.botz-library--embedded .botz-library__close {
+    display: none;
 }
 
 .botz-library__eyebrow {
@@ -49,8 +60,21 @@
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    max-width: 68rem;
-    margin: 0 auto 1rem;
+    max-width: 74rem;
+    margin: 0 auto 1.25rem;
+    border: 1px solid #d6e3eb;
+    border-radius: 0.55rem;
+    padding: 0.55rem;
+    background: #fff;
+}
+
+.botz-library__toolbar:before {
+    content: 'CANVAS';
+    padding-inline: 0.55rem;
+    color: #53758b;
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
 }
 
 .botz-library__toolbar input {
@@ -88,23 +112,51 @@
 
 .botz-library__grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
-    gap: 0.85rem;
-    max-width: 68rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.7rem;
+    max-width: 74rem;
+    max-height: 31rem;
+    overflow-y: auto;
     margin: 0 auto;
+    padding: 0.45rem;
+    background-color: #f8fbfd;
+    background-image:
+        linear-gradient(#e5f0f5 1px, transparent 1px), linear-gradient(90deg, #e5f0f5 1px, transparent 1px);
+    background-size: 1.25rem 1.25rem;
+    border: 1px solid #d6e3eb;
+    border-radius: 0.6rem;
 }
 
 .botz-card {
-    display: flex;
-    flex-direction: column;
-    gap: 0.55rem;
-    min-height: 10.5rem;
-    border: 1px solid #dce5eb;
-    border-top: 3px solid #0e7490;
-    border-radius: 0.8rem;
-    padding: 1rem;
+    display: grid;
+    grid-template-columns: 2rem minmax(0, 1fr) auto;
+    grid-template-areas: 'icon content action';
+    align-items: center;
+    gap: 0.7rem;
+    min-height: 4.8rem;
+    border: 1px solid #d7e3ea;
+    border-radius: 0.7rem;
+    padding: 0.7rem 0.75rem;
     background: #fff;
-    box-shadow: 0 4px 15px rgb(15 23 42 / 5%);
+    box-shadow: 0 2px 6px rgb(15 43 61 / 5%);
+}
+
+.botz-card:before {
+    grid-area: icon;
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0.55rem;
+    content: 'BOT';
+    color: #fff;
+    background: linear-gradient(145deg, #087b9c, #0d9bb5);
+    font-size: 0.48rem;
+    font-weight: 800;
+}
+
+.botz-card__topline {
+    display: none;
 }
 
 .botz-card--violet {
@@ -135,38 +187,33 @@
     border-top-color: #4f46e5;
 }
 
-.botz-card__topline {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    color: #64748b;
-    font-size: 0.68rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-}
-
-.botz-card__dot {
-    width: 0.45rem;
-    height: 0.45rem;
-    border-radius: 999px;
-    background: #0e7490;
+.botz-card__content {
+    grid-area: content;
+    min-width: 0;
 }
 
 .botz-card h3 {
-    margin: 0.15rem 0 0;
-    font-size: 0.94rem;
+    margin: 0;
+    overflow: hidden;
+    color: #14324a;
+    font-size: 0.78rem;
     line-height: 1.25;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .botz-card p {
-    flex: 1;
-    font-size: 0.76rem;
-    line-height: 1.45;
+    overflow: hidden;
+    margin-top: 0.2rem;
+    font-size: 0.64rem;
+    line-height: 1.35;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .botz-card button {
-    align-self: flex-start;
+    grid-area: action;
+    align-self: center;
     border: 0;
     border-radius: 0.5rem;
     padding: 0.55rem 0.7rem;
@@ -179,6 +226,28 @@
 
 .botz-card button:hover {
     filter: brightness(0.94);
+}
+
+@media (width <= 760px) {
+    .botz-library {
+        inset: 0;
+        padding: 1rem;
+    }
+
+    .botz-library__grid {
+        grid-template-columns: 1fr;
+        max-height: none;
+    }
+
+    .botz-card {
+        grid-template-columns: 2rem minmax(0, 1fr);
+        grid-template-areas: 'icon content' 'icon action';
+    }
+
+    .botz-card button {
+        justify-self: start;
+        margin-top: 0.25rem;
+    }
 }
 
 .botz-card button:disabled {

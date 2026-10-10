@@ -363,9 +363,10 @@ const AppWrapper = observer(() => {
                                     </>
                                 }
                                 id='id-botz'
-                            />
-                            <div className='botz-main-tab'>
-                                <BotzLibrary embedded />
+                            >
+                                <div className='botz-main-tab'>
+                                    <BotzLibrary embedded />
+                                </div>
                             </div>
                         </Tabs>
                         {!isDesktop && right_tab_shadow && <span className='tabs-shadow tabs-shadow--right' />}{' '}

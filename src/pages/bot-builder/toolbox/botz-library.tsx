@@ -11,8 +11,8 @@ type BotzStrategy = {
 
 const BOTZ_STRATEGIES: BotzStrategy[] = [
     {
-        name: 'Entry + Manual Digit',
-        description: 'Manual digit confirmation with structured entry rules.',
+        name: 'SΛMUΞL Entry + Manual Com Digit',
+        description: 'Entry strategy with manual digit controls.',
         category: 'Entry',
         file: 'entry-manual-com-digit.xml',
         accent: 'violet',
@@ -32,8 +32,8 @@ const BOTZ_STRATEGIES: BotzStrategy[] = [
         accent: 'amber',
     },
     {
-        name: 'Entry Best',
-        description: 'Entry-focused bot configuration for synthetic indices.',
+        name: 'ENTRY BEST',
+        description: 'Entry-focused strategy configuration.',
         category: 'Entry',
         file: 'entry-best.xml',
         accent: 'emerald',
@@ -53,8 +53,8 @@ const BOTZ_STRATEGIES: BotzStrategy[] = [
         accent: 'rose',
     },
     {
-        name: 'Target + Entry',
-        description: 'Target digit tracking with a clear entry sequence.',
+        name: 'SΛMUΞL Target + Entry',
+        description: 'Target digit and entry analysis strategy.',
         category: 'Analysis',
         file: 'target-entry.xml',
         accent: 'indigo',
@@ -137,8 +137,10 @@ const BotzLibrary = ({ onClose = () => undefined, embedded = false }: BotzLibrar
                             <span>{strategy.category}</span>
                             <span className='botz-card__dot' />
                         </div>
-                        <h3>{strategy.name}</h3>
-                        <p>{strategy.description}</p>
+                        <div className='botz-card__content'>
+                            <h3>{strategy.name}</h3>
+                            <p>{strategy.description}</p>
+                        </div>
                         <button type='button' onClick={() => loadBot(strategy)} disabled={loading_file !== null}>
                             {loading_file === strategy.file ? 'Loading…' : 'Open in Builder'}
                         </button>
