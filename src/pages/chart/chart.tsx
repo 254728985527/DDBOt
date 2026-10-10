@@ -64,17 +64,24 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
     };
     useEffect(() => {
         let cancelled = false;
-        chart_api
-            .init()
-            .then(api => {
-                if (!cancelled && api?.connection?.readyState === WebSocket.OPEN) setIsChartApiReady(true);
-            })
-            .catch(() => {
-                if (!cancelled) setIsChartApiReady(false);
-            });
+        let retry_timer: ReturnType<typeof setTimeout> | undefined;
+        const connect = async () => {
+            try {
+                const api = await chart_api.init(true);
+                if (!cancelled && api?.connection?.readyState === WebSocket.OPEN) {
+                    setIsChartApiReady(true);
+                    return;
+                }
+            } catch {
+                // Retry public market data without surfacing transient socket failures.
+            }
+            if (!cancelled) retry_timer = window.setTimeout(connect, 1500);
+        };
+        connect();
 
         return () => {
             cancelled = true;
+            if (retry_timer) window.clearTimeout(retry_timer);
         };
     }, []);
 
@@ -115,7 +122,7 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
         if (!subscription_id) return;
         subscriptions[subscription_id]?.unsubscribe?.();
         delete subscriptions[subscription_id];
-            chart_api.api?.forget(subscription_id);
+        chart_api.api?.forget(subscription_id);
     };
 
     const requestSubscribe = async (req: TicksStreamRequest, callback: (data: any) => void) => {
@@ -140,7 +147,7 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
         }
     };
 
-        if (!symbol || !isChartApiReady || !chart_api.api) {
+    if (!symbol || !isChartApiReady || !chart_api.api) {
         return (
             <div className='dashboard__chart-wrapper chart-loading-state'>
                 <div className='chart-loading-state__spinner' aria-hidden='true' />

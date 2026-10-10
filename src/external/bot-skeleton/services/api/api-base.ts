@@ -103,6 +103,20 @@ class APIBase {
             this.api?.connection.addEventListener('close', this.onsocketclose.bind(this));
         }
 
+        if (this.api?.connection?.readyState === 0) {
+            await new Promise<void>(resolve => {
+                const connection = this.api?.connection;
+                if (!connection) return resolve();
+                const finish = () => {
+                    connection.removeEventListener('open', finish);
+                    connection.removeEventListener('error', finish);
+                    resolve();
+                };
+                connection.addEventListener('open', finish);
+                connection.addEventListener('error', finish);
+            });
+        }
+
         if (!this.has_active_symbols && !V2GetActiveToken()) {
             this.active_symbols_promise = this.getActiveSymbols();
         }
