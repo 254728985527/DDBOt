@@ -35,6 +35,7 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
     const { common, ui } = useStore();
     const { chart_store, run_panel, dashboard } = useStore();
     const [isSafari, setIsSafari] = useState(false);
+    const [isChartApiReady, setIsChartApiReady] = useState(false);
 
     const {
         chart_type,
@@ -62,6 +63,22 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
         theme: ui.is_dark_mode_on ? 'dark' : 'light',
     };
     useEffect(() => {
+        let cancelled = false;
+        chart_api
+            .init()
+            .then(() => {
+                if (!cancelled) setIsChartApiReady(true);
+            })
+            .catch(() => {
+                if (!cancelled) setIsChartApiReady(false);
+            });
+
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+
+    useEffect(() => {
         // Safari browser detection
         const isSafariBrowser = () => {
             const ua = navigator.userAgent.toLowerCase();
@@ -85,10 +102,13 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
     }, [chart_subscription_id]);
 
     useEffect(() => {
-        if (!symbol) updateSymbol();
-    }, [symbol, updateSymbol]);
+        if (!isChartApiReady) return;
+        updateSymbol();
+    }, [isChartApiReady, updateSymbol]);
 
-    const requestAPI = (req: ServerTimeRequest | ActiveSymbolsRequest | TradingTimesRequest) => {
+    const requestAPI = async (req: ServerTimeRequest | ActiveSymbolsRequest | TradingTimesRequest) => {
+        if (!chart_api.api) await chart_api.init();
+        if (!chart_api.api) throw new Error('Chart connection is unavailable');
         return chart_api.api.send(req);
     };
     const requestForgetStream = (subscription_id: string) => {
@@ -118,8 +138,15 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
         }
     };
 
-    if (!symbol) return null;
-    const is_connection_opened = !!chart_api?.api;
+    if (!symbol || !isChartApiReady) {
+        return (
+            <div className='dashboard__chart-wrapper chart-loading-state'>
+                <div className='chart-loading-state__spinner' aria-hidden='true' />
+                <span>{isChartApiReady ? 'Retrieving Market Symbols...' : 'Connecting to market data...'}</span>
+            </div>
+        );
+    }
+    const is_connection_opened = chart_api.api?.connection?.readyState === WebSocket.OPEN;
     return (
         <div
             className={classNames('dashboard__chart-wrapper', {
