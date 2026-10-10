@@ -1,5 +1,5 @@
 import React from 'react';
-import { loadWorkspace } from '@/external/bot-skeleton/scratch/utils';
+import { load } from '@/external/bot-skeleton';
 import { useStore } from '@/hooks/useStore';
 import './botz-library.scss';
 
@@ -93,8 +93,17 @@ const BotzLibrary = ({ onClose = () => undefined, embedded = false }: BotzLibrar
                 workspace = window.Blockly?.derivWorkspace;
             }
             if (!workspace || !window.Blockly?.Xml) throw new Error('Bot Builder is still loading');
-            const xml_dom = window.Blockly.Xml.textToDom(xml_text);
-            await loadWorkspace(xml_dom, 'botz-load', workspace);
+            await load({
+                block_string: xml_text,
+                file_name: strategy.name,
+                workspace,
+                drop_event: {},
+                strategy_id: null,
+                from: 'botz',
+                showIncompatibleStrategyDialog: false,
+                show_snackbar: false,
+            });
+            workspace.strategy_to_load = xml_text;
             onClose();
         } catch (error) {
             setMessage(error instanceof Error ? error.message : 'Unable to load this bot');
