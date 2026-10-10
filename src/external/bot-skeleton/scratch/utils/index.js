@@ -264,21 +264,36 @@ const refreshLoadedTradeDefinition = workspace => {
     const trade_definition = workspace.getAllBlocks(true).find(block => block.type === 'trade_definition');
     if (!trade_definition) return;
 
-    const blocks = [
-        trade_definition.getChildByType('trade_definition_market'),
-        trade_definition.getChildByType('trade_definition_tradetype'),
-        trade_definition.getChildByType('trade_definition_contracttype'),
-        trade_definition.getChildByType('trade_definition_tradeoptions'),
-        trade_definition.getChildByType('trade_definition_multiplier'),
-        trade_definition.getChildByType('trade_definition_accumulator'),
-    ].filter(Boolean);
-
-    blocks.forEach(block => {
-        const event = new window.Blockly.Events.BlockCreate(block);
+    const market = trade_definition.getChildByType('trade_definition_market');
+    const trade_type = trade_definition.getChildByType('trade_definition_tradetype');
+    const contract_type = trade_definition.getChildByType('trade_definition_contracttype');
+    const trade_options = trade_definition.getChildByType('trade_definition_tradeoptions');
+    const group = window.Blockly.Events.getGroup() || 'dbot-load-parameters';
+    const emitChange = (block, name, value) => {
+        if (!block) return;
+        const event = new window.Blockly.Events.BlockChange(block, name, undefined, value);
         event.recordUndo = false;
-        event.group = window.Blockly.Events.getGroup();
+        event.group = group;
         window.Blockly.Events.fire(event);
-    });
+    };
+
+    // Re-emit the dependency chain in order: symbol -> category -> trade type -> contract -> purchase.
+    emitChange(market, 'SYMBOL_LIST', market?.getFieldValue('SYMBOL_LIST'));
+    emitChange(trade_type, 'TRADETYPECAT_LIST', trade_type?.getFieldValue('TRADETYPECAT_LIST'));
+    emitChange(trade_type, 'TRADETYPE_LIST', trade_type?.getFieldValue('TRADETYPE_LIST'));
+    emitChange(contract_type, 'TRADETYPE_LIST', trade_type?.getFieldValue('TRADETYPE_LIST'));
+    emitChange(trade_options, 'TRADETYPE_LIST', trade_type?.getFieldValue('TRADETYPE_LIST'));
+
+    [trade_options, contract_type, ...workspace.getAllBlocks(true).filter(block => block.type === 'purchase')]
+        .filter(Boolean)
+        .forEach(block =>
+            block.onchange?.({
+                type: window.Blockly.Events.BLOCK_CREATE,
+                ids: [block.id],
+                group,
+                blockId: block.id,
+            })
+        );
 };
 
 export const loadWorkspace = async (xml, event_group, workspace) => {
