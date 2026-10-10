@@ -267,7 +267,10 @@ const refreshLoadedTradeDefinition = workspace => {
     const blocks = [
         trade_definition.getChildByType('trade_definition_market'),
         trade_definition.getChildByType('trade_definition_tradetype'),
+        trade_definition.getChildByType('trade_definition_contracttype'),
         trade_definition.getChildByType('trade_definition_tradeoptions'),
+        trade_definition.getChildByType('trade_definition_multiplier'),
+        trade_definition.getChildByType('trade_definition_accumulator'),
     ].filter(Boolean);
 
     blocks.forEach(block => {
@@ -285,9 +288,10 @@ export const loadWorkspace = async (xml, event_group, workspace) => {
     workspace.cleanUp();
 
     // Loaded XML can arrive before active-symbols/contracts-for data is ready.
-    // Re-run the trade parameter population once immediately and once after the API cache settles.
-    refreshLoadedTradeDefinition(workspace);
-    window.setTimeout(() => refreshLoadedTradeDefinition(workspace), 250);
+    // Re-run the parameter population as the API caches become available.
+    [0, 250, 1000, 2500, 5000].forEach(delay => {
+        window.setTimeout(() => refreshLoadedTradeDefinition(workspace), delay);
+    });
 };
 
 const loadBlocksFromHeader = (xml_string, block) => {
