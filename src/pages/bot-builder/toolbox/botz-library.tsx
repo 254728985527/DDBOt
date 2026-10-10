@@ -78,13 +78,30 @@ const BotzLibrary = ({ onClose = () => undefined, embedded = false }: BotzLibrar
     const [loading_file, setLoadingFile] = React.useState<string | null>(null);
     const [message, setMessage] = React.useState('');
 
+    const sanitizeXmlForWorkspace = (xml_text: string) => {
+        const xml_dom = window.Blockly.Xml.textToDom(xml_text);
+        const removed_types = new Set<string>();
+        xml_dom.querySelectorAll('block').forEach(block => {
+            const type = block.getAttribute('type');
+            if (type && !window.Blockly.Blocks?.[type]) {
+                removed_types.add(type);
+                block.parentElement?.removeChild(block);
+            }
+        });
+        return {
+            xml_text: window.Blockly.Xml.domToText(xml_dom),
+            removed_types: [...removed_types],
+        };
+    };
+
     const loadBot = async (strategy: BotzStrategy) => {
         setLoadingFile(strategy.file);
         setMessage('');
         try {
             const response = await fetch(`/botz/${strategy.file}`);
             if (!response.ok) throw new Error('Unable to load strategy');
-            const xml_text = await response.text();
+            const raw_xml_text = await response.text();
+            const { xml_text, removed_types } = sanitizeXmlForWorkspace(raw_xml_text);
             dashboard.setActiveTab(1);
             const load_started_at = Date.now();
             let workspace = window.Blockly?.derivWorkspace;
@@ -104,6 +121,11 @@ const BotzLibrary = ({ onClose = () => undefined, embedded = false }: BotzLibrar
                 show_snackbar: false,
             });
             workspace.strategy_to_load = xml_text;
+            if (removed_types.length) {
+                setMessage(
+                    `Loaded with ${removed_types.length} unsupported block type${removed_types.length === 1 ? '' : 's'} removed.`
+                );
+            }
             onClose();
         } catch (error) {
             setMessage(error instanceof Error ? error.message : 'Unable to load this bot');
