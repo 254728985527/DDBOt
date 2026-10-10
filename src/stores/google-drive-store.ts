@@ -36,6 +36,7 @@ export default class GoogleDriveStore {
     client: any;
     access_token: string;
     upload_id?: string;
+    private client_initialisation?: Promise<void>;
 
     constructor(root_store: RootStore) {
         makeObservable(this, {
@@ -65,7 +66,7 @@ export default class GoogleDriveStore {
         this.client = null;
         this.access_token = localStorage.getItem('google_access_token') ?? '';
         setTimeout(() => {
-            importExternal('https://accounts.google.com/gsi/client').then(() => this.initialiseClient());
+            // Load the Drive picker on startup, but initialise Google OAuth only when Drive is used.
             importExternal('https://apis.google.com/js/api.js').then(() => this.initialise());
         }, 3000);
     }
@@ -79,7 +80,7 @@ export default class GoogleDriveStore {
 
     setKey = () => {
         const { SCOPE, DISCOVERY_DOCS } = config().GOOGLE_DRIVE;
-        this.client_id = process.env.GD_CLIENT_ID;
+        this.client_id = process.env.GD_CLIENT_ID?.trim() || undefined;
         this.app_id = process.env.GD_APP_ID;
         this.api_key = process.env.GD_API_KEY;
         this.scope = SCOPE;
@@ -97,6 +98,10 @@ export default class GoogleDriveStore {
     };
 
     initialiseClient = () => {
+        // Google Identity Services throws when the client ID is not configured.
+        // This can happen in preview builds where Drive credentials are unavailable.
+        if (this.client || !this.client_id || typeof google === 'undefined' || !google.accounts?.oauth2) return;
+
         this.client = google.accounts.oauth2.initTokenClient({
             client_id: this.client_id,
             scope: this.scope,
@@ -151,7 +156,20 @@ export default class GoogleDriveStore {
     };
 
     async signIn() {
-        if (!this.is_authorised) {
+        if (this.is_authorised) return;
+
+        if (!this.client_id) {
+            throw new Error('Google Drive is not configured: missing client ID.');
+        }
+
+        if (!this.client) {
+            this.client_initialisation ??= importExternal('https://accounts.google.com/gsi/client')
+                .then(() => this.initialiseClient())
+                .then(() => undefined);
+            await this.client_initialisation;
+        }
+
+        if (this.client) {
             await this.client.requestAccessToken();
         }
     }
