@@ -189,15 +189,10 @@ export default class FlyoutStore implements IFlyoutStore {
 
         this.block_listeners.forEach(listener => window.Blockly.browserEvents.unbind(listener));
         this.block_workspaces.forEach(workspace => {
-            if (workspace && !workspace.isDisposed?.()) {
-                try {
-                    workspace.dispose();
-                } catch (error) {
-                    // Blockly can reject disposal for an unregistered flyout workspace.
-                    // Clear the reference so it cannot be disposed again on the next render.
-                    if (!String(error).includes("hasn't been subscribed")) throw error;
-                }
-            }
+            if (!workspace || workspace.isDisposed?.()) return;
+            const svg_root = workspace.getParentSvg?.();
+            svg_root?.parentNode?.removeChild(svg_root);
+            workspace.removeChangeListener?.(() => undefined);
         });
         this.block_listeners = [];
         this.block_workspaces = [];

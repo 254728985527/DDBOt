@@ -2,19 +2,21 @@ import { generateDerivApiInstance } from './appId';
 
 class ChartAPI {
     api;
+    time_interval;
+    reconnecting = false;
 
-    onsocketclose() {
+    onsocketclose = () => {
         this.reconnectIfNotConnected();
-    }
+    };
 
     init = async (force_create_connection = false) => {
         if (!this.api || force_create_connection) {
             if (this.api?.connection) {
+                this.api.connection.removeEventListener('close', this.onsocketclose);
                 this.api.disconnect();
-                this.api.connection.removeEventListener('close', this.onsocketclose.bind(this));
             }
             this.api = await generateDerivApiInstance();
-            this.api?.connection.addEventListener('close', this.onsocketclose.bind(this));
+            this.api?.connection.addEventListener('close', this.onsocketclose);
         }
         if (this.api?.connection?.readyState === 0) {
             await new Promise((resolve, reject) => {
@@ -27,13 +29,13 @@ class ChartAPI {
                 const onerror = () => {
                     connection.removeEventListener('open', onopen);
                     connection.removeEventListener('error', onerror);
-                    reject(new Error('Chart market-data connection failed'));
+                    resolve();
                 };
                 connection.addEventListener('open', onopen, { once: true });
                 connection.addEventListener('error', onerror, { once: true });
             });
         }
-        this.getTime();
+        if (this.api?.connection?.readyState === WebSocket.OPEN) this.getTime();
         return this.api;
     };
 
@@ -46,13 +48,11 @@ class ChartAPI {
     }
 
     reconnectIfNotConnected = () => {
-        // eslint-disable-next-line no-console
-        console.log('chart connection state: ', this.api?.connection?.readyState);
-        if (this.api?.connection?.readyState && this.api?.connection?.readyState > 1) {
-            // eslint-disable-next-line no-console
-            console.log('Info: Chart connection to the server was closed, trying to reconnect.');
-            this.init(true);
-        }
+        if (this.reconnecting || this.api?.connection?.readyState === WebSocket.OPEN) return;
+        this.reconnecting = true;
+        this.init(true).finally(() => {
+            this.reconnecting = false;
+        });
     };
 }
 

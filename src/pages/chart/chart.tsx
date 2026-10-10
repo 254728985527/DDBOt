@@ -90,10 +90,10 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
         return () => {
             Object.values(subscriptions).forEach(subscription => subscription?.unsubscribe?.());
             Object.keys(subscriptions).forEach(subscription_id => {
-                chart_api.api.forget(subscription_id);
+                chart_api.api?.forget(subscription_id);
                 delete subscriptions[subscription_id];
             });
-            chart_api.api.forgetAll('ticks');
+            chart_api.api?.forgetAll('ticks');
         };
     }, []);
 
@@ -115,17 +115,19 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
         if (!subscription_id) return;
         subscriptions[subscription_id]?.unsubscribe?.();
         delete subscriptions[subscription_id];
-        chart_api.api.forget(subscription_id);
+            chart_api.api?.forget(subscription_id);
     };
 
     const requestSubscribe = async (req: TicksStreamRequest, callback: (data: any) => void) => {
         try {
             requestForgetStream(chartSubscriptionIdRef.current);
-            const history = await chart_api.api.send(req);
+            const api = await chart_api.init();
+            if (!api?.connection || api.connection.readyState !== WebSocket.OPEN) return;
+            const history = await api.send(req);
             setChartSubscriptionId(history?.subscription.id);
             if (history) callback(history);
             if (req.subscribe === 1) {
-                subscriptions[history?.subscription.id] = chart_api.api
+                subscriptions[history?.subscription.id] = api
                     .onMessage()
                     ?.subscribe(({ data }: { data: TicksHistoryResponse }) => {
                         callback(data);
@@ -138,7 +140,7 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
         }
     };
 
-    if (!symbol || !isChartApiReady) {
+        if (!symbol || !isChartApiReady || !chart_api.api) {
         return (
             <div className='dashboard__chart-wrapper chart-loading-state'>
                 <div className='chart-loading-state__spinner' aria-hidden='true' />
