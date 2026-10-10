@@ -64,16 +64,21 @@ const SymbolSelect: React.FC = () => {
                   }
                 | undefined;
             await helper?.retrieveActiveSymbols?.();
-            const loaded_symbols = helper?.getSymbolsForBot?.() ?? [];
+            const loaded_symbols = (helper?.getSymbolsForBot?.() ?? []).filter(symbol =>
+                Boolean(symbol?.value && symbol?.text)
+            );
             if (cancelled) return;
+            if (!loaded_symbols.length) {
+                retry_timer = window.setTimeout(loadSymbols, 1000);
+                return;
+            }
             setActiveSymbols(loaded_symbols);
 
-            const has_symbol = loaded_symbols.some(symbol => symbol?.value === values?.symbol);
-            if (!has_symbol && loaded_symbols[0]?.value) {
+            const has_symbol = loaded_symbols.some(symbol => symbol.value === values?.symbol);
+            if (!has_symbol) {
                 setFieldValue('symbol', loaded_symbols[0].value);
                 setValue('symbol', loaded_symbols[0].value);
             }
-            if (!loaded_symbols.length) retry_timer = window.setTimeout(loadSymbols, 1000);
         };
         loadSymbols();
         return () => {

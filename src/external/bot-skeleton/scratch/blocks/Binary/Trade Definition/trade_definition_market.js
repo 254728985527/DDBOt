@@ -70,6 +70,18 @@ window.Blockly.Blocks.trade_definition_market = {
         const symbol = symbol_dropdown.getValue();
 
         const market_options = active_symbols.getMarketDropdownOptions();
+        if (!market_options.length) {
+            active_symbols.retrieveActiveSymbols?.(true)?.then(() => {
+                if (this.workspace && !this.isDisposed?.()) {
+                    market_dropdown.updateOptions(active_symbols.getMarketDropdownOptions(), {
+                        default_value: market,
+                        should_pretend_empty: true,
+                        event_group: event.group,
+                    });
+                }
+            });
+            return;
+        }
 
         const populateMarketDropdown = () => {
             market_dropdown?.updateOptions(market_options, {
