@@ -1,4 +1,6 @@
 import React from 'react';
+import { loadWorkspace } from '@/external/bot-skeleton/scratch/utils';
+import { useStore } from '@/hooks/useStore';
 import './botz-library.scss';
 
 type BotzStrategy = {
@@ -71,6 +73,7 @@ const BOTZ_STRATEGIES: BotzStrategy[] = [
 type BotzLibraryProps = { onClose?: () => void; embedded?: boolean };
 
 const BotzLibrary = ({ onClose = () => undefined, embedded = false }: BotzLibraryProps) => {
+    const { dashboard } = useStore();
     const [query, setQuery] = React.useState('');
     const [loading_file, setLoadingFile] = React.useState<string | null>(null);
     const [message, setMessage] = React.useState('');
@@ -82,11 +85,16 @@ const BotzLibrary = ({ onClose = () => undefined, embedded = false }: BotzLibrar
             const response = await fetch(`/botz/${strategy.file}`);
             if (!response.ok) throw new Error('Unable to load strategy');
             const xml_text = await response.text();
-            const workspace = window.Blockly?.derivWorkspace;
+            dashboard.setActiveTab(1);
+            const load_started_at = Date.now();
+            let workspace = window.Blockly?.derivWorkspace;
+            while (!workspace && Date.now() - load_started_at < 5000) {
+                await new Promise(resolve => window.setTimeout(resolve, 100));
+                workspace = window.Blockly?.derivWorkspace;
+            }
             if (!workspace || !window.Blockly?.Xml) throw new Error('Bot Builder is still loading');
-            workspace.clear();
             const xml_dom = window.Blockly.Xml.textToDom(xml_text);
-            window.Blockly.Xml.domToWorkspace(xml_dom, workspace);
+            await loadWorkspace(xml_dom, 'botz-load', workspace);
             onClose();
         } catch (error) {
             setMessage(error instanceof Error ? error.message : 'Unable to load this bot');
