@@ -68,9 +68,9 @@ const BOTZ_STRATEGIES: BotzStrategy[] = [
     },
 ];
 
-type BotzLibraryProps = { onClose: () => void };
+type BotzLibraryProps = { onClose?: () => void; embedded?: boolean };
 
-const BotzLibrary = ({ onClose }: BotzLibraryProps) => {
+const BotzLibrary = ({ onClose = () => undefined, embedded = false }: BotzLibraryProps) => {
     const [query, setQuery] = React.useState('');
     const [loading_file, setLoadingFile] = React.useState<string | null>(null);
     const [message, setMessage] = React.useState('');
@@ -100,7 +100,12 @@ const BotzLibrary = ({ onClose }: BotzLibraryProps) => {
     );
 
     return (
-        <div className='botz-library' role='dialog' aria-modal='true' aria-labelledby='botz-library-title'>
+        <div
+            className={`botz-library${embedded ? ' botz-library--embedded' : ''}`}
+            role={embedded ? undefined : 'dialog'}
+            aria-modal={embedded ? undefined : 'true'}
+            aria-labelledby='botz-library-title'
+        >
             <div className='botz-library__header'>
                 <div>
                     <div className='botz-library__eyebrow'>STRATEGY LIBRARY</div>

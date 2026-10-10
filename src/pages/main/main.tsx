@@ -28,6 +28,7 @@ import { requestOidcAuthentication } from '@deriv-com/auth-client';
 import { Localize, localize } from '@deriv-com/translations';
 import { useDevice } from '@deriv-com/ui';
 import RunPanel from '../../components/run-panel';
+import BotzLibrary from '../bot-builder/toolbox/botz-library';
 import ChartModal from '../chart/chart-modal';
 import Dashboard from '../dashboard';
 import RunStrategy from '../dashboard/run-strategy';
@@ -363,6 +364,9 @@ const AppWrapper = observer(() => {
                                 }
                                 id='id-botz'
                             />
+                            <div className='botz-main-tab'>
+                                <BotzLibrary embedded />
+                            </div>
                         </Tabs>
                         {!isDesktop && right_tab_shadow && <span className='tabs-shadow tabs-shadow--right' />}{' '}
                     </div>
