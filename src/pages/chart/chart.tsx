@@ -61,20 +61,6 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
         position: ui.is_chart_layout_default ? 'bottom' : 'left',
         theme: ui.is_dark_mode_on ? 'dark' : 'light',
     };
-    console.log({
-        chart_type,
-        getMarketsOrder,
-        granularity,
-        onSymbolChange,
-        setChartStatus,
-        symbol,
-        updateChartType,
-        updateGranularity,
-        updateSymbol,
-        setChartSubscriptionId,
-        chart_subscription_id,
-    });
-
     useEffect(() => {
         // Safari browser detection
         const isSafariBrowser = () => {
@@ -85,6 +71,11 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
         setIsSafari(isSafariBrowser());
 
         return () => {
+            Object.values(subscriptions).forEach(subscription => subscription?.unsubscribe?.());
+            Object.keys(subscriptions).forEach(subscription_id => {
+                chart_api.api.forget(subscription_id);
+                delete subscriptions[subscription_id];
+            });
             chart_api.api.forgetAll('ticks');
         };
     }, []);
@@ -101,7 +92,10 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
         return chart_api.api.send(req);
     };
     const requestForgetStream = (subscription_id: string) => {
-        subscription_id && chart_api.api.forget(subscription_id);
+        if (!subscription_id) return;
+        subscriptions[subscription_id]?.unsubscribe?.();
+        delete subscriptions[subscription_id];
+        chart_api.api.forget(subscription_id);
     };
 
     const requestSubscribe = async (req: TicksStreamRequest, callback: (data: any) => void) => {
@@ -120,7 +114,7 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
         } catch (e) {
             // eslint-disable-next-line no-console
             (e as TError)?.error?.code === 'MarketIsClosed' && callback([]); //if market is closed sending a empty array  to resolve
-            console.log((e as TError)?.error?.message);
+            // MarketIsClosed is represented by an empty chart response; other request errors are handled by SmartChart.
         }
     };
 
@@ -155,8 +149,8 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
                 enabledNavigationWidget={isDesktop}
                 granularity={granularity}
                 requestAPI={requestAPI}
-                requestForget={() => {}}
-                requestForgetStream={() => {}}
+                requestForget={requestForgetStream}
+                requestForgetStream={requestForgetStream}
                 requestSubscribe={requestSubscribe}
                 settings={settings}
                 symbol={symbol}
