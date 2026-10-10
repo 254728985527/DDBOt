@@ -126,6 +126,7 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
     };
 
     const requestSubscribe = async (req: TicksStreamRequest, callback: (data: any) => void) => {
+        if (!req.ticks_history || req.ticks_history === 'undefined' || req.ticks_history === '') return;
         try {
             requestForgetStream(chartSubscriptionIdRef.current);
             const api = await chart_api.init();

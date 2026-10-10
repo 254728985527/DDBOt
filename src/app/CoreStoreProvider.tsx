@@ -112,18 +112,6 @@ const CoreStoreProvider: React.FC<{ children: React.ReactNode }> = observer(({ c
 
         // Only setup the interval if the connection is open and we have access to the API
         if (client && connectionStatus === CONNECTION_STATUS.OPENED && api_base?.api) {
-            if (!appInitialization.current) {
-                appInitialization.current = true;
-                api_base.api
-                    ?.send({ website_status: 1, req_id: 2 })
-                    .then((res: TSocketResponseData<'website_status'>) => {
-                        if (res?.website_status) client.setWebsiteStatus(res.website_status);
-                    })
-                    .catch(() => {
-                        // Public market-data sockets may not expose website status.
-                    });
-            }
-
             // Initial time update
             updateServerTime();
 

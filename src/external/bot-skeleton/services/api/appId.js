@@ -1,10 +1,11 @@
+import { getAppId } from '@/components/shared';
 import DerivAPIBasic from '@deriv/deriv-api/dist/DerivAPIBasic';
-import APIMiddleware from './api-middleware';
 
-export const PUBLIC_MARKET_DATA_SOCKET = 'wss://api.derivws.com/trading/v1/options/ws/public';
-
+// The legacy Deriv API client used by SmartChart and Bot Builder requires the
+// documented WebSocket protocol; the /trading/v1/options/ws/public endpoint
+// does not accept active_symbols, ticks_history, or contracts_for requests.
 export const generateDerivApiInstance = () => {
-    const socket_url = PUBLIC_MARKET_DATA_SOCKET;
+    const socket_url = `wss://ws.derivws.com/websockets/v3?app_id=${getAppId()}`;
     const deriv_socket = new WebSocket(socket_url);
     const deriv_api = new DerivAPIBasic({
         connection: deriv_socket,

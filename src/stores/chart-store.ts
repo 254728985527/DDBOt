@@ -71,8 +71,9 @@ export default class ChartStore {
             return block.type === 'trade_definition_market';
         });
 
-        const symbol = market_block?.getFieldValue('SYMBOL_LIST') ?? api_base?.active_symbols[0]?.symbol;
-        this.symbol = symbol;
+        const block_symbol = market_block?.getFieldValue('SYMBOL_LIST');
+        const active_symbol = api_base?.active_symbols?.find(item => item?.symbol)?.symbol;
+        this.symbol = block_symbol && block_symbol !== 'undefined' ? block_symbol : active_symbol;
     };
 
     onSymbolChange = (symbol: string) => {
