@@ -78,6 +78,11 @@
                 background: var(--general-section-1);
                 justify-content: start;
 
+                @include desktop-screen {
+                    gap: 0.8rem;
+                    padding-inline: 1.6rem;
+                }
+
                 @include mobile-or-tablet-screen {
                     overflow-x: auto;
                     overflow-y: hidden;
@@ -92,6 +97,16 @@
                 &--header {
                     &--main {
                         &__tabs {
+                            .dc-tabs__item {
+                                min-width: 14rem;
+                                font-size: 1.6rem;
+                                font-weight: 400;
+
+                                &.dc-tabs__active {
+                                    font-weight: 700;
+                                }
+                            }
+
                             @include mobile-or-tablet-screen {
                                 width: 100%;
                                 overflow-x: auto;
