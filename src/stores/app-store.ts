@@ -155,6 +155,7 @@ export default class AppStore {
     };
 
     onMount = async () => {
+        this.has_unmounted = false;
         const { blockly_store, run_panel } = this.root_store;
         const { client, ui } = this.core;
         this.showDigitalOptionsMaltainvestError();
@@ -201,12 +202,22 @@ export default class AppStore {
         );
     };
 
+    private has_unmounted = false;
+
     onUnmount = () => {
+        if (this.has_unmounted) return;
+        this.has_unmounted = true;
         DBot.terminateBot();
         DBot.terminateConnection();
-        if (window.Blockly?.derivWorkspace) {
-            clearInterval(window.Blockly?.derivWorkspace.save_workspace_interval);
-            window.Blockly.derivWorkspace?.dispose();
+        const workspace = window.Blockly?.derivWorkspace;
+        window.Blockly.derivWorkspace = null;
+        if (workspace) {
+            clearInterval(workspace.save_workspace_interval);
+            try {
+                workspace.dispose();
+            } catch (error) {
+                if (!String(error).includes("hasn't been subscribed")) throw error;
+            }
         }
         if (typeof this.disposeReloadOnLanguageChangeReaction === 'function') {
             this.disposeReloadOnLanguageChangeReaction();
