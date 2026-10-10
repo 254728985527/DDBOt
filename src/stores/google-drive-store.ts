@@ -97,6 +97,11 @@ export default class GoogleDriveStore {
     };
 
     initialiseClient = () => {
+        if (!this.client_id || !this.scope || !window.google?.accounts?.oauth2) {
+            this.client = null;
+            return;
+        }
+
         this.client = google.accounts.oauth2.initTokenClient({
             client_id: this.client_id,
             scope: this.scope,
@@ -152,6 +157,9 @@ export default class GoogleDriveStore {
 
     async signIn() {
         if (!this.is_authorised) {
+            if (!this.client) {
+                throw new Error('Google Drive is not configured for this environment.');
+            }
             await this.client.requestAccessToken();
         }
     }
