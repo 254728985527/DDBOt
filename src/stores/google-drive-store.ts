@@ -97,6 +97,10 @@ export default class GoogleDriveStore {
     };
 
     initialiseClient = () => {
+        // Google Identity Services throws when the client ID is not configured.
+        // This can happen in preview builds where Drive credentials are unavailable.
+        if (!this.client_id || typeof google === 'undefined' || !google.accounts?.oauth2) return;
+
         this.client = google.accounts.oauth2.initTokenClient({
             client_id: this.client_id,
             scope: this.scope,
@@ -151,7 +155,7 @@ export default class GoogleDriveStore {
     };
 
     async signIn() {
-        if (!this.is_authorised) {
+        if (!this.is_authorised && this.client) {
             await this.client.requestAccessToken();
         }
     }
