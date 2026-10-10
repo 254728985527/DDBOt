@@ -32,6 +32,7 @@ import BotzLibrary from '../bot-builder/toolbox/botz-library';
 import ChartModal from '../chart/chart-modal';
 import Dashboard from '../dashboard';
 import RunStrategy from '../dashboard/run-strategy';
+import Hedging from '../hedging/hedging';
 import './main.scss';
 
 const ChartWrapper = lazy(() => import('../chart/chart-wrapper'));
@@ -367,6 +368,21 @@ const AppWrapper = observer(() => {
                                 <div className='botz-main-tab'>
                                     <BotzLibrary embedded />
                                 </div>
+                            </div>
+                            <div
+                                label={
+                                    <>
+                                        <LabelPairedPuzzlePieceTwoCaptionBoldIcon
+                                            height='24px'
+                                            width='24px'
+                                            fill='var(--text-general)'
+                                        />
+                                        <Localize i18n_default_text='Hedging' />
+                                    </>
+                                }
+                                id='id-hedging'
+                            >
+                                <Hedging />
                             </div>
                         </Tabs>
                         {!isDesktop && right_tab_shadow && <span className='tabs-shadow tabs-shadow--right' />}{' '}
