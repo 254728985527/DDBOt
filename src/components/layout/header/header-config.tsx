@@ -1,5 +1,6 @@
 import { ReactNode } from 'react';
 import { standalone_routes } from '@/components/shared';
+import { LabelPairedPuzzlePieceTwoCaptionBoldIcon as BotzLogo } from '@deriv/quill-icons/LabelPaired';
 import {
     LegacyCashierIcon as CashierLogo,
     LegacyHomeNewIcon as TradershubLogo,
@@ -75,6 +76,12 @@ export const TRADERS_HUB_LINK_CONFIG = {
 };
 
 export const MenuItems: MenuItemsConfig[] = [
+    {
+        as: 'a',
+        href: standalone_routes.bot,
+        icon: <BotzLogo iconSize='xs' />,
+        label: localize('Botz'),
+    },
     {
         as: 'a',
         href: standalone_routes.cashier,
