@@ -82,6 +82,26 @@ const AppContent = observer(() => {
         }
     }, [common, connectionStatus, offline_timeout]);
 
+    // Never leave the application on the loader when the Deriv API cannot connect.
+    // The dashboard can still render and display the connection state.
+    useEffect(() => {
+        if (is_api_initialized) return;
+
+        const timeout = setTimeout(() => {
+            setIsApiInitialized(true);
+            setIsLoading(false);
+        }, 8000);
+
+        return () => clearTimeout(timeout);
+    }, [is_api_initialized]);
+
+    useEffect(() => {
+        if (!is_api_initialized || !is_loading) return;
+
+        const timeout = setTimeout(() => setIsLoading(false), 10000);
+        return () => clearTimeout(timeout);
+    }, [is_api_initialized, is_loading]);
+
     // Handle offline scenarios - don't wait indefinitely for API
     useEffect(() => {
         if (!isOnline && is_loading) {
