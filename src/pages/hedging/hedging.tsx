@@ -68,8 +68,10 @@ const Hedging = () => {
     const [threshold, setThreshold] = useState('15%');
     const [scope, setScope] = useState('All (≥15)% Active');
     const [overStake, setOverStake] = useState('0.35');
-    const [underStake, setUnderStake] = useState('0.35');
-    const [martingale, setMartingale] = useState('1.23');
+  const [underStake, setUnderStake] = useState('0.35');
+  const [martingale, setMartingale] = useState('1.23');
+  const [manualPrediction, setManualPrediction] = useState(false);
+  const [predictionDigit, setPredictionDigit] = useState('5');
     const [quote, setQuote] = useState<number | null>(null);
     const [epoch, setEpoch] = useState<number | null>(null);
     const [tickHistory, setTickHistory] = useState<number[]>([]);
@@ -250,8 +252,8 @@ const Hedging = () => {
                     <MarketHeader selectedSymbol={selectedSymbol} symbol={symbol} setSymbol={setSymbol} formattedQuote={formattedQuote} formattedTime={formattedTime} tickSubscriptionActive={tickSubscriptionActive} />
                     <div className='selected-strategy'><small>SELECTED STRATEGY</small><h2>High / Low Tick</h2><span>Trade both independent hedge legs from one view.</span></div>
                     <div className='high-low-cards'>
-                        <TickCard label='High Tick' target='Peak Target: #5' stake={overStake} setStake={setOverStake} status='READY' ticks={tradeSession?.leg === 'high' ? sessionTicks : []} onRun={() => startTrade('high', 5)} />
-                        <TickCard label='Low Tick' target='Valley Target: #5' stake={underStake} setStake={setUnderStake} status='LOSS' ticks={tradeSession?.leg === 'low' ? sessionTicks : []} onRun={() => startTrade('low', 5)} />
+                        <TickCard label='High Tick' target={`Peak Target: #${manualPrediction ? predictionDigit : 5}`} stake={overStake} setStake={setOverStake} status='READY' ticks={tradeSession?.leg === 'high' ? sessionTicks : []} manualPrediction={manualPrediction} setManualPrediction={setManualPrediction} predictionDigit={predictionDigit} setPredictionDigit={setPredictionDigit} onRun={() => startTrade('high', 5)} />
+                        <TickCard label='Low Tick' target={`Valley Target: #${manualPrediction ? predictionDigit : 5}`} stake={underStake} setStake={setUnderStake} status='LOSS' ticks={tradeSession?.leg === 'low' ? sessionTicks : []} manualPrediction={manualPrediction} setManualPrediction={setManualPrediction} predictionDigit={predictionDigit} setPredictionDigit={setPredictionDigit} onRun={() => startTrade('low', 5)} />
                     </div>
                 </section>
             )}
@@ -318,7 +320,7 @@ const DirectionCard = ({ direction, quote, stake, setStake, ticks, onBuy, moment
     </article>
 );
 
-const TickCard = ({ label, target, stake, setStake, status, ticks, onRun }: { label: string; target: string; stake: string; setStake: (value: string) => void; status: string; ticks: number[]; onRun: () => void }) => {
+const TickCard = ({ label, target, stake, setStake, status, ticks, manualPrediction, setManualPrediction, predictionDigit, setPredictionDigit, onRun }: { label: string; target: string; stake: string; setStake: (value: string) => void; status: string; ticks: number[]; manualPrediction: boolean; setManualPrediction: (value: boolean) => void; predictionDigit: string; setPredictionDigit: (value: string) => void; onRun: () => void }) => {
     const [enabled, setEnabled] = useState(false);
     const is_high = label === 'High Tick';
 
@@ -342,6 +344,10 @@ const TickCard = ({ label, target, stake, setStake, status, ticks, onRun }: { la
                 <i aria-hidden='true' />
             </label>
             <input className='tick-card__stake' value={`$ ${stake}`} onChange={event => setStake(event.target.value.replace(/[^0-9.]/g, ''))} inputMode='decimal' aria-label={`${label} manual stake`} />
+            <div className='tick-card__prediction'>
+                <label className='tick-card__toggle'><span>Prediction<small>{manualPrediction ? 'Manual digit used for prediction.' : 'Use automatic prediction.'}</small></span><input type='checkbox' checked={manualPrediction} onChange={event => setManualPrediction(event.target.checked)} /><i aria-hidden='true' /></label>
+                {manualPrediction && <label className='tick-card__digit'>Manual prediction digit<select value={predictionDigit} onChange={event => setPredictionDigit(event.target.value)} aria-label={`${label} prediction digit`}>{Array.from({ length: 10 }, (_, digit) => <option value={digit} key={digit}>{digit}</option>)}</select></label>}
+            </div>
             <div className='potential-payout'>Potential payout <b>$19.50</b></div>
             <button className='tick-card__run' type='button' disabled={!enabled || (ticks.length > 0 && ticks.length < 5)} onClick={onRun}>{ticks.length >= 5 ? `✓ ${label} complete` : ticks.length ? `Running ${label}: ${ticks.length}/5 ticks` : `Run ${label} (5 ticks)`}</button>
             <small className='tick-card__hint'>Select the strategy to configure it independently.</small>
