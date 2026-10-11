@@ -1,4 +1,5 @@
 import ReactDOM from 'react-dom/client';
+import { Analytics } from '@vercel/analytics/react';
 import { AuthWrapper } from './app/AuthWrapper';
 import { AnalyticsInitializer } from './utils/analytics';
 import { registerPWA } from './utils/pwa-utils';
@@ -17,4 +18,9 @@ registerPWA()
         console.error('PWA service worker registration failed:', error);
     });
 
-ReactDOM.createRoot(document.getElementById('root')!).render(<AuthWrapper />);
+ReactDOM.createRoot(document.getElementById('root')!).render(
+    <>
+        <AuthWrapper />
+        <Analytics />
+    </>
+);
