@@ -241,7 +241,7 @@ const TickCard = ({ label, target, stake, setStake, status, ticks, onRun }: { la
             </header>
             <div className={`tick-chart tick-chart--${is_high ? 'high' : 'low'}`}>
                 <LiveTickCanvas values={ticks} accent={is_high ? '#347edb' : '#ff4860'} />
-                <span className='tick-chart__title'>{ticks.length ? `Incoming ticks ${ticks.length}/5: ${ticks.map(value => value.toFixed(2)).join(' → ')}` : `Tick 5: ${is_high ? 'Highest' : 'Lowest'} Tick`}</span>
+                <span className='tick-chart__title'>{ticks.length ? `Incoming ticks ${ticks.length}/5: ${ticks.map(value => value.toFixed(2)).join(' → ')}` : ''}</span>
                 <span className='tick-chart__start'>Start</span><span className='tick-chart__exit'>Exit Tick</span><strong className='tick-chart__target'>{is_high ? 'Tick 5: Highest Tick' : 'Tick 5: Lowest Tick'}</strong>
                 <i /><b />
             </div>
