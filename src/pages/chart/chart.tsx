@@ -29,6 +29,8 @@ type TError = null | {
 };
 
 const subscriptions: TSubscription = {};
+const publicTickSockets: Record<string, WebSocket> = {};
+const PUBLIC_MARKET_DATA_URL = 'wss://api.derivws.com/trading/v1/options/ws/public';
 
 const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) => {
     const barriers: [] = [];
@@ -100,6 +102,8 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
                 chart_api.api?.forget(subscription_id);
                 delete subscriptions[subscription_id];
             });
+            Object.values(publicTickSockets).forEach(socket => socket.close(1000, 'Chart view closed'));
+            Object.keys(publicTickSockets).forEach(subscription_id => delete publicTickSockets[subscription_id]);
             chart_api.api?.forgetAll('ticks');
         };
     }, []);
@@ -125,6 +129,8 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
         if (!subscription_id) return;
         subscriptions[subscription_id]?.unsubscribe?.();
         delete subscriptions[subscription_id];
+        publicTickSockets[subscription_id]?.close(1000, 'Chart stream replaced');
+        delete publicTickSockets[subscription_id];
         chart_api.api?.forget(subscription_id);
     };
 
@@ -137,12 +143,23 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
             const history = await api.send(req);
             setChartSubscriptionId(history?.subscription.id);
             if (history) callback(history);
-            if (req.subscribe === 1) {
-                subscriptions[history?.subscription.id] = api
-                    .onMessage()
-                    ?.subscribe(({ data }: { data: TicksHistoryResponse }) => {
-                        callback(data);
-                    });
+            if (req.subscribe === 1 && history?.subscription?.id) {
+                const subscriptionId = history.subscription.id;
+                const publicSocket = new WebSocket(PUBLIC_MARKET_DATA_URL);
+                publicTickSockets[subscriptionId] = publicSocket;
+                publicSocket.addEventListener('open', () => {
+                    publicSocket.send(JSON.stringify({ ticks: req.ticks_history, subscribe: 1 }));
+                });
+                publicSocket.addEventListener('message', event => {
+                    try {
+                        callback(JSON.parse(event.data as string));
+                    } catch {
+                        // Ignore non-JSON public gateway frames.
+                    }
+                });
+                publicSocket.addEventListener('error', () => {
+                    publicSocket.close();
+                });
             }
         } catch (e) {
             // eslint-disable-next-line no-console
