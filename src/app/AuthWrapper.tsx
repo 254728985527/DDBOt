@@ -1,4 +1,4 @@
-import React from 'react';
+import { type Dispatch, type SetStateAction,useEffect, useState } from 'react';
 import Cookies from 'js-cookie';
 import ChunkLoader from '@/components/loader/chunk-loader';
 import { generateDerivApiInstance } from '@/external/bot-skeleton/services/api/appId';
@@ -19,7 +19,7 @@ declare global {
 const setLocalStorageToken = async (
     loginInfo: URLUtils.LoginInfo[],
     paramsToDelete: string[],
-    setIsAuthComplete: React.Dispatch<React.SetStateAction<boolean>>,
+    setIsAuthComplete: Dispatch<SetStateAction<boolean>>,
     isOnline: boolean
 ) => {
     if (loginInfo.length) {
@@ -99,13 +99,13 @@ const setLocalStorageToken = async (
 };
 
 export const AuthWrapper = () => {
-    const [isAuthComplete, setIsAuthComplete] = React.useState(false);
+    const [isAuthComplete, setIsAuthComplete] = useState(false);
     const { loginInfo: urlLoginInfo, paramsToDelete } = URLUtils.getLoginInfoFromURL();
-    const [serverLoginInfo, setServerLoginInfo] = React.useState<URLUtils.LoginInfo[]>([]);
+    const [serverLoginInfo, setServerLoginInfo] = useState<URLUtils.LoginInfo[]>([]);
     const loginInfo = urlLoginInfo.length ? urlLoginInfo : serverLoginInfo;
     const { isOnline } = useOfflineDetection();
 
-    React.useEffect(() => {
+    useEffect(() => {
         fetch('/auth/session', { credentials: 'include' })
             .then(async response => {
                 if (!response.ok) return;
@@ -144,7 +144,7 @@ export const AuthWrapper = () => {
     }, [loginInfo, paramsToDelete, isOnline]);
 
     // Add timeout for offline scenarios to prevent infinite loading
-    React.useEffect(() => {
+    useEffect(() => {
         if (!isOnline && !isAuthComplete) {
             console.log('[Auth] Offline detected, setting auth timeout');
             const timeout = setTimeout(() => {
