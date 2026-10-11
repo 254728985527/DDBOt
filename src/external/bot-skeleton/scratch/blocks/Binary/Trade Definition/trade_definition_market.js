@@ -70,25 +70,31 @@ window.Blockly.Blocks.trade_definition_market = {
         const symbol = symbol_dropdown.getValue();
 
         const market_options = active_symbols.getMarketDropdownOptions();
-        if (!market_options.length) {
-            active_symbols.retrieveActiveSymbols?.(true)?.then(() => {
+        const is_unavailable = options => !options?.length || (options.length === 1 && options[0]?.[1] === 'na');
+        if (!active_symbols.is_initialised || is_unavailable(market_options)) {
+            Promise.resolve(active_symbols.retrieveActiveSymbols?.(true)).then(() => {
                 if (this.workspace && !this.isDisposed?.()) {
                     const refreshed_markets = active_symbols.getMarketDropdownOptions();
+                    const refreshed_market_value =
+                        market && market !== 'na' ? market : refreshed_markets[0]?.[1] || 'synthetic_index';
                     market_dropdown.updateOptions(refreshed_markets, {
-                        default_value: market || 'synthetic_index',
+                        default_value: refreshed_market_value,
                         should_pretend_empty: true,
                         event_group: event.group,
                     });
-                    const refreshed_market = market_dropdown.getValue() || 'synthetic_index';
+                    const refreshed_market = market_dropdown.getValue() || refreshed_market_value;
                     const refreshed_submarkets = active_symbols.getSubmarketDropdownOptions(refreshed_market);
+                    const refreshed_submarket_value =
+                        submarket && submarket !== 'na' ? submarket : refreshed_submarkets[0]?.[1] || 'random_index';
                     submarket_dropdown.updateOptions(refreshed_submarkets, {
-                        default_value: submarket || 'random_index',
+                        default_value: refreshed_submarket_value,
                         should_pretend_empty: true,
                         event_group: event.group,
                     });
-                    const refreshed_submarket = submarket_dropdown.getValue() || 'random_index';
-                    symbol_dropdown.updateOptions(active_symbols.getSymbolDropdownOptions(refreshed_submarket), {
-                        default_value: symbol || 'R_100',
+                    const refreshed_submarket = submarket_dropdown.getValue() || refreshed_submarket_value;
+                    const refreshed_symbols = active_symbols.getSymbolDropdownOptions(refreshed_submarket);
+                    symbol_dropdown.updateOptions(refreshed_symbols, {
+                        default_value: symbol && symbol !== 'na' ? symbol : refreshed_symbols[0]?.[1] || 'R_100',
                         should_pretend_empty: true,
                         event_group: event.group,
                     });
@@ -98,7 +104,7 @@ window.Blockly.Blocks.trade_definition_market = {
         }
 
         const populateDropdownChain = () => {
-            const selected_market = market || market_options[0]?.[1] || 'synthetic_index';
+            const selected_market = market && market !== 'na' ? market : market_options[0]?.[1] || 'synthetic_index';
             market_dropdown?.updateOptions(market_options, {
                 default_value: selected_market,
                 should_pretend_empty: true,
@@ -106,7 +112,8 @@ window.Blockly.Blocks.trade_definition_market = {
             });
 
             const submarket_options = active_symbols.getSubmarketDropdownOptions(selected_market);
-            const selected_submarket = submarket || submarket_options[0]?.[1] || 'random_index';
+            const selected_submarket =
+                submarket && submarket !== 'na' ? submarket : submarket_options[0]?.[1] || 'random_index';
             submarket_dropdown?.updateOptions(submarket_options, {
                 default_value: selected_submarket,
                 should_pretend_empty: true,
@@ -115,7 +122,7 @@ window.Blockly.Blocks.trade_definition_market = {
 
             const symbol_options = active_symbols.getSymbolDropdownOptions(selected_submarket);
             symbol_dropdown?.updateOptions(symbol_options, {
-                default_value: symbol || symbol_options[0]?.[1] || 'R_100',
+                default_value: symbol && symbol !== 'na' ? symbol : symbol_options[0]?.[1] || 'R_100',
                 should_pretend_empty: true,
                 event_group: event.group,
             });
