@@ -168,7 +168,11 @@ const AppHeader = observer(({ isAuthenticating }: TAppHeaderProps) => {
                     <Button
                         className='auth-action auth-action--login'
                         tertiary
-                        onClick={() => setIsAppIdModalOpen(true)}
+                        onClick={() => {
+                            setRedirectUrl(`${window.location.origin}/callback`);
+                            setWebsiteUrl(window.location.origin);
+                            setIsAppIdModalOpen(true);
+                        }}
                     >
                         <Localize i18n_default_text='Log in' />
                     </Button>
