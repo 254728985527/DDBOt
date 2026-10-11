@@ -1,4 +1,4 @@
-import { getCurrencyDisplayCode, getDecimalPlaces } from '@/components/shared';
+import { getDecimalPlaces } from '@/components/shared';
 import { isAuthorizing$ } from '@/external/bot-skeleton/services/api/observables/connection-status-stream';
 import { localize } from '@deriv-com/translations';
 import { config } from '../../../../constants/config';
@@ -46,7 +46,7 @@ window.Blockly.Blocks.trade_definition_tradeoptions = {
                 {
                     type: 'field_label',
                     name: 'CURRENCY_LIST',
-                    text: getCurrencyDisplayCode(config().lists.CURRENCY[0]),
+                    text: 'USD',
                 },
                 {
                     type: 'input_value',
