@@ -73,8 +73,22 @@ window.Blockly.Blocks.trade_definition_market = {
         if (!market_options.length) {
             active_symbols.retrieveActiveSymbols?.(true)?.then(() => {
                 if (this.workspace && !this.isDisposed?.()) {
-                    market_dropdown.updateOptions(active_symbols.getMarketDropdownOptions(), {
-                        default_value: market,
+                    const refreshed_markets = active_symbols.getMarketDropdownOptions();
+                    market_dropdown.updateOptions(refreshed_markets, {
+                        default_value: market || 'synthetic_index',
+                        should_pretend_empty: true,
+                        event_group: event.group,
+                    });
+                    const refreshed_market = market_dropdown.getValue() || 'synthetic_index';
+                    const refreshed_submarkets = active_symbols.getSubmarketDropdownOptions(refreshed_market);
+                    submarket_dropdown.updateOptions(refreshed_submarkets, {
+                        default_value: submarket || 'random_index',
+                        should_pretend_empty: true,
+                        event_group: event.group,
+                    });
+                    const refreshed_submarket = submarket_dropdown.getValue() || 'random_index';
+                    symbol_dropdown.updateOptions(active_symbols.getSymbolDropdownOptions(refreshed_submarket), {
+                        default_value: symbol || 'R_100',
                         should_pretend_empty: true,
                         event_group: event.group,
                     });
