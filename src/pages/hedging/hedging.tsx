@@ -42,13 +42,13 @@ const symbols = [
 ];
 
 const modes: { value: HedgeMode; label: string; icon?: string }[] = [
-    { value: 'over-under', label: 'Over / Under Hedging' },
-    { value: 'ups-downs', label: 'Only Ups / Downs', icon: '↗' },
+    { value: 'over-under', label: 'Shield Over / Under Hedging' },
+    { value: 'ups-downs', label: 'Only Ups / Downs', icon: '›' },
     { value: 'high-low', label: 'High / Low Tick', icon: '↯' },
 ];
 
 const Hedging = () => {
-    const [mode, setMode] = useState<HedgeMode>('over-under');
+    const [mode, setMode] = useState<HedgeMode>('high-low');
     const [symbol, setSymbol] = useState('1HZ100V');
     const [target, setTarget] = useState(4);
     const [threshold, setThreshold] = useState('15%');
@@ -237,12 +237,12 @@ const TickCard = ({ label, target, stake, setStake, status, ticks, onRun }: { la
         <article className='tick-card'>
             <header className='tick-card__header'>
                 <div><strong>{label}</strong><small>({target})</small></div>
-                <em className={status === 'LOSS' ? 'is-loss' : ''}>{status}</em>
+                <em className='is-ready'>READY</em>
             </header>
             <div className={`tick-chart tick-chart--${is_high ? 'high' : 'low'}`}>
                 <LiveTickCanvas values={ticks} accent={is_high ? '#347edb' : '#ff4860'} />
                 <span className='tick-chart__title'>{ticks.length ? `Incoming ticks ${ticks.length}/5: ${ticks.map(value => value.toFixed(2)).join(' → ')}` : `Tick 5: ${is_high ? 'Highest' : 'Lowest'} Tick`}</span>
-                <span className='tick-chart__start'>Start</span><span className='tick-chart__exit'>Exit Tick</span>
+                <span className='tick-chart__start'>Start</span><span className='tick-chart__exit'>Exit Tick</span><strong className='tick-chart__target'>{is_high ? 'Tick 5: Highest Tick' : 'Tick 5: Lowest Tick'}</strong>
                 <i /><b />
             </div>
             <label className='tick-card__toggle'>
