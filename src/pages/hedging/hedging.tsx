@@ -1,4 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { observer } from 'mobx-react-lite';
+import { useStore } from '@/hooks/useStore';
 import { LabelPairedChevronDownSmBoldIcon } from '@deriv/quill-icons/LabelPaired';
 import './hedging.scss';
 
@@ -58,7 +60,23 @@ const modes: { value: HedgeMode; label: string; icon?: string }[] = [
     { value: 'high-low', label: 'High / Low Tick', icon: '↯' },
 ];
 
-const Hedging = () => {
+const Hedging = observer(() => {
+    const { run_panel } = useStore();
+    const runIsOn = run_panel.is_running || run_panel.has_open_contract;
+    const runStateRef = useRef(runIsOn);
+    const previousRunState = useRef(runIsOn);
+    useEffect(() => {
+        runStateRef.current = runIsOn;
+        if (!runIsOn && previousRunState.current) {
+            tickKeysRef.current.clear();
+            setTickHistory([]);
+        }
+        if (runIsOn && !previousRunState.current) {
+            tickKeysRef.current.clear();
+            setTickHistory([]);
+        }
+        previousRunState.current = runIsOn;
+    }, [runIsOn]);
     const [mode, setMode] = useState<HedgeMode>('high-low');
     const [symbol, setSymbol] = useState('1HZ100V');
     const [target, setTarget] = useState(4);
@@ -179,7 +197,9 @@ const Hedging = () => {
             if (tick.symbol !== symbol) return;
             setQuote(quote);
             setEpoch(tick.epoch ?? null);
-            setTickHistory(previous => (previous.length >= MAX_HEDGE_TICKS ? previous : [...previous, quote]));
+            if (runStateRef.current) {
+                setTickHistory(previous => (previous.length >= MAX_HEDGE_TICKS ? previous : [...previous, quote]));
+            }
         };
         publicSocket.addEventListener('open', () => {
             setTickSubscriptionActive(true);
@@ -647,7 +667,7 @@ const Hedging = () => {
             </section>
         </main>
     );
-};
+});
 
 const HedgeControlPanel = ({
     target,
