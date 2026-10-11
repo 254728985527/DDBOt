@@ -33,6 +33,31 @@ const registerHedgePurchase = (type, title, args0, generator) => {
 };
 
 registerHedgePurchase(
+    'rise_fall_hedge_purchase',
+    'RISE/FALL Hedge purchase  Purchase 1: %1  Purchase 2: %2',
+    [
+        {
+            type: 'field_dropdown',
+            name: 'PURCHASE_1',
+            options: [
+                ['Rise', 'CALL'],
+                ['Fall', 'PUT'],
+            ],
+        },
+        {
+            type: 'field_dropdown',
+            name: 'PURCHASE_2',
+            options: [
+                ['Rise', 'CALL'],
+                ['Fall', 'PUT'],
+            ],
+        },
+    ],
+    block =>
+        `Bot.purchase('${block.getFieldValue('PURCHASE_1')}');\\nBot.purchase('${block.getFieldValue('PURCHASE_2')}');\\n`
+);
+
+registerHedgePurchase(
     'higher_lower_hedge_purchase',
     'HIGHER/LOWER Hedge purchase  Purchase 1: %1  Barrier: %2 %3 %4  stake 1: %5  Purchase 2: %6  Barrier: %7 %8 %9  stake 2: %10',
     [
