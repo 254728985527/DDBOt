@@ -277,7 +277,15 @@ window.Blockly.Blocks.trade_definition_tradeoptions = {
     updateDurationInput(should_use_default_unit, should_update_value) {
         const { contracts_for } = ApiHelpers?.instance ?? {};
         const applyDurationOptions = durations => {
-            const valid_durations = durations.filter(duration => duration?.unit && duration.unit !== 'na');
+            const valid_durations = durations.filter(
+                duration =>
+                    duration?.unit &&
+                    duration.unit !== 'na' &&
+                    Number.isFinite(Number(duration.min)) &&
+                    Number.isFinite(Number(duration.max)) &&
+                    Number(duration.min) > 0 &&
+                    Number(duration.max) >= Number(duration.min)
+            );
             const normalized_durations = valid_durations.length
                 ? valid_durations
                 : [
@@ -306,7 +314,14 @@ window.Blockly.Blocks.trade_definition_tradeoptions = {
                     const selected_duration =
                         normalized_durations.find(duration => duration.unit === default_unit) ||
                         normalized_durations[0];
-                    if (selected_duration) target_block.setFieldValue(String(selected_duration.min), 'NUM');
+                    if (selected_duration) {
+                        const current_value = Number(target_block.getFieldValue('NUM')) || selected_duration.min;
+                        const clamped_value = Math.min(
+                            Math.max(current_value, selected_duration.min),
+                            selected_duration.max ?? current_value
+                        );
+                        runIrreversibleEvents(() => target_block.setFieldValue(String(clamped_value), 'NUM'));
+                    }
                 }
             }
         };

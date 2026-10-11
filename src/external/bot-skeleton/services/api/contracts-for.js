@@ -306,7 +306,7 @@ export default class ContractsFor {
 
         // If only intraday contracts available, remove day durations
         if (contracts_for_category.every(contract => contract.expiry_type === 'intraday')) {
-            const day_duration_index = durations.findIndex(d => d[1] === 'd');
+            const day_duration_index = durations.findIndex(d => d.unit === 'd');
 
             if (day_duration_index !== -1) {
                 durations.splice(day_duration_index, 1);
