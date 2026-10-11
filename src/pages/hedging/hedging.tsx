@@ -297,7 +297,7 @@ const DirectionCard = ({ direction, quote, stake, setStake, ticks, onBuy, moment
             <div className='direction-card__badges'><button type='button' onClick={onBuy}>{direction === 'up' ? 'RUN HIGH' : 'RUN LOW'}</button><b>Weekly</b><em>Active</em></div>
         </header>
         <div className='mini-chart'>
-            <strong>✓ {direction === 'up' ? 'Continuous Rise' : 'Continuous Fall'} (0/2 Ticks)</strong><span className='direction-card__momentum'>{direction === 'up' ? 'UP' : 'DOWN'} MOMENTUM <b>{momentum}%</b></span>
+            <strong>✓ {direction === 'up' ? 'Continuous Rise' : 'Continuous Fall'} (0/2 Ticks)</strong><span className='direction-card__momentum'>{direction === 'up' ? 'UP' : 'DOWN'} MOMENTUM <b>{momentum}</b></span>
             <svg viewBox='0 0 620 190' preserveAspectRatio='none' aria-label={`${direction} direction chart`} role='img'><polyline points={direction === 'up' ? '45,150 310,95 565,40' : '45,40 310,95 565,150'} /><circle cx='45' cy={direction === 'up' ? '150' : '40'} r='7' /><circle className='is-middle' cx='310' cy='95' r='7' /><circle cx='565' cy={direction === 'up' ? '40' : '150'} r='7' /></svg>
             <span className='mini-chart__start'>Start</span><span className='mini-chart__end'>End</span>
         </div>
