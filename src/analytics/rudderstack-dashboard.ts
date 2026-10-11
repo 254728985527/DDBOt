@@ -1,7 +1,8 @@
-import { Analytics, TEvents } from '@deriv-com/analytics';
+import { Analytics } from '@deriv-com/analytics';
 import { ACTION, form_name } from './constants';
+import type { TBotFormEvent } from './types';
 
-export const rudderStackSendDashboardClickEvent = ({ dashboard_click_name, subpage_name }: TEvents['ce_bot_form']) => {
+export const rudderStackSendDashboardClickEvent = ({ dashboard_click_name, subpage_name }: TBotFormEvent) => {
     Analytics.trackEvent('ce_bot_form', {
         action: ACTION.DASHBOARD_CLICK,
         form_name,
@@ -10,7 +11,7 @@ export const rudderStackSendDashboardClickEvent = ({ dashboard_click_name, subpa
     });
 };
 
-export const rudderStackSendAnnouncementClickEvent = ({ announcement_name }: TEvents['ce_bot_form']) => {
+export const rudderStackSendAnnouncementClickEvent = ({ announcement_name }: TBotFormEvent) => {
     Analytics.trackEvent('ce_bot_form', {
         action: ACTION.ANNOUNCEMENT_CLICK,
         form_name,
@@ -20,10 +21,7 @@ export const rudderStackSendAnnouncementClickEvent = ({ announcement_name }: TEv
     });
 };
 
-export const rudderStackSendAnnouncementActionEvent = ({
-    announcement_name,
-    announcement_action,
-}: TEvents['ce_bot_form']) => {
+export const rudderStackSendAnnouncementActionEvent = ({ announcement_name, announcement_action }: TBotFormEvent) => {
     Analytics.trackEvent('ce_bot_form', {
         action: ACTION.ANNOUNCEMENT_ACTION,
         form_name,

@@ -1,5 +1,6 @@
-import { Analytics, TEvents } from '@deriv-com/analytics';
+import { Analytics } from '@deriv-com/analytics';
 import { ACTION, form_name, TSelectedStrategy } from './constants';
+import type { TBotFormEvent } from './types';
 import { getRsStrategyType } from './utils';
 
 export const rudderStackSendSelectQsStrategyGuideEvent = ({ selected_strategy }: TSelectedStrategy) => {
@@ -11,7 +12,7 @@ export const rudderStackSendSelectQsStrategyGuideEvent = ({ selected_strategy }:
     });
 };
 
-export const rudderStackSendTutorialSearchEvent = ({ search_term }: TEvents['ce_bot_form']) => {
+export const rudderStackSendTutorialSearchEvent = ({ search_term }: TBotFormEvent) => {
     Analytics.trackEvent('ce_bot_form', {
         action: 'search',
         form_name: 'ce_bot_form',

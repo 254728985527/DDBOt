@@ -1,11 +1,12 @@
-import { Analytics, TEvents } from '@deriv-com/analytics';
+import { Analytics } from '@deriv-com/analytics';
 import { ACTION, form_name, type TFormStrategy } from './constants';
+import type { TBotFormEvent } from './types';
 import { getRsStrategyType, getTradeParameterData } from './utils';
 
 export const rudderStackSendQsRunStrategyEvent = ({
     form_values,
     selected_strategy,
-}: TEvents['ce_bot_form'] & TFormStrategy) => {
+}: TBotFormEvent & TFormStrategy) => {
     Analytics.trackEvent('ce_bot_form', {
         action: ACTION.RUN_QUICK_STRATEGY,
         form_name,
@@ -18,7 +19,7 @@ export const rudderStackSendQsRunStrategyEvent = ({
 export const rudderStackSendQsEditStrategyEvent = ({
     form_values,
     selected_strategy,
-}: TEvents['ce_bot_form'] & TFormStrategy) => {
+}: TBotFormEvent & TFormStrategy) => {
     Analytics.trackEvent('ce_bot_form', {
         action: ACTION.EDIT_QUICK_STRATEGY,
         form_name,
@@ -28,7 +29,7 @@ export const rudderStackSendQsEditStrategyEvent = ({
     });
 };
 
-export const rudderStackSendQsSelectedTabEvent = ({ quick_strategy_tab }: TEvents['ce_bot_form']) => {
+export const rudderStackSendQsSelectedTabEvent = ({ quick_strategy_tab }: TBotFormEvent) => {
     Analytics.trackEvent('ce_bot_form', {
         action: ACTION.SWITCH_QUICK_STRATEGY_TAB,
         form_name,

@@ -1,5 +1,6 @@
-import { Analytics, TEvents } from '@deriv-com/analytics';
+import { Analytics } from '@deriv-com/analytics';
 import { ACTION, form_name, TFormStrategy } from './constants';
+import type { TBotFormEvent } from './types';
 import { getRsStrategyType } from './utils';
 
 export const rudderStackSendOpenEvent = ({
@@ -7,7 +8,7 @@ export const rudderStackSendOpenEvent = ({
     subform_source,
     subform_name,
     load_strategy_tab,
-}: TEvents['ce_bot_form']) => {
+}: TBotFormEvent) => {
     Analytics.trackEvent('ce_bot_form', {
         action: ACTION.OPEN,
         form_name,
@@ -24,7 +25,7 @@ export const rudderStackSendCloseEvent = ({
     selected_strategy,
     load_strategy_tab,
     announcement_name,
-}: TEvents['ce_bot_form'] & TFormStrategy) => {
+}: TBotFormEvent & TFormStrategy) => {
     Analytics.trackEvent('ce_bot_form', {
         action: ACTION.CLOSE,
         form_name,
@@ -36,7 +37,7 @@ export const rudderStackSendCloseEvent = ({
     });
 };
 
-export const rudderStackSendRunBotEvent = ({ subpage_name }: TEvents['ce_bot_form']) => {
+export const rudderStackSendRunBotEvent = ({ subpage_name }: TBotFormEvent) => {
     Analytics.trackEvent('ce_bot_form', {
         action: ACTION.RUN_BOT,
         form_name,
@@ -44,7 +45,7 @@ export const rudderStackSendRunBotEvent = ({ subpage_name }: TEvents['ce_bot_for
     });
 };
 
-export const rudderStackSendUploadStrategyStartEvent = ({ upload_provider, upload_id }: TEvents['ce_bot_form']) => {
+export const rudderStackSendUploadStrategyStartEvent = ({ upload_provider, upload_id }: TBotFormEvent) => {
     Analytics.trackEvent('ce_bot_form', {
         action: ACTION.UPLOAD_STRATEGY_START,
         form_name,
@@ -59,7 +60,7 @@ export const rudderStackSendUploadStrategyCompletedEvent = ({
     upload_provider,
     upload_id,
     upload_type,
-}: TEvents['ce_bot_form']) => {
+}: TBotFormEvent) => {
     Analytics.trackEvent('ce_bot_form', {
         action: ACTION.UPLOAD_STRATEGY_COMPLETED,
         form_name,
@@ -77,7 +78,7 @@ export const rudderStackSendUploadStrategyFailedEvent = ({
     upload_type,
     error_message,
     error_code,
-}: TEvents['ce_bot_form']) => {
+}: TBotFormEvent) => {
     Analytics.trackEvent('ce_bot_form', {
         action: ACTION.UPLOAD_STRATEGY_FAILED,
         form_name,

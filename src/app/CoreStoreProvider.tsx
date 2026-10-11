@@ -28,7 +28,6 @@ const CoreStoreProvider: React.FC<{ children: React.ReactNode }> = observer(({ c
     const currentDomain = useMemo(() => '.' + window.location.hostname.split('.').slice(-2).join('.'), []);
     const { isAuthorizing, isAuthorized, connectionStatus, accountList, activeLoginid } = useApiBase();
 
-    const appInitialization = useRef(false);
     const accountInitialization = useRef(false);
     const timeInterval = useRef<NodeJS.Timeout | null>(null);
     const msg_listener = useRef<{ unsubscribe: () => void } | null>(null);
@@ -201,16 +200,16 @@ const CoreStoreProvider: React.FC<{ children: React.ReactNode }> = observer(({ c
                     domain: currentDomain,
                 });
 
-            if (settingRes.get_settings?.country_code) {
-                api_base.api
-                    .landingCompany({
-                        landing_company: settingRes.get_settings.country_code,
-                    })
-                    .then((res: TSocketResponseData<'landing_company'>) => {
-                        client?.setLandingCompany(res.landing_company as unknown as TLandingCompany);
-                    })
-                    .catch(() => undefined);
-            }
+                if (settingRes.get_settings?.country_code) {
+                    api_base.api
+                        .landingCompany({
+                            landing_company: settingRes.get_settings.country_code,
+                        })
+                        .then((res: TSocketResponseData<'landing_company'>) => {
+                            client?.setLandingCompany(res.landing_company as unknown as TLandingCompany);
+                        })
+                        .catch(() => undefined);
+                }
             });
 
             api_base.api.getAccountStatus().then((res: TSocketResponseData<'get_account_status'>) => {

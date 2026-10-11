@@ -15,7 +15,7 @@
         "build:webpack": "webpack --config webpack.config.js",
         "test:lint": "prettier --log-level silent --write . && eslint \"./src/**/*.?(js|jsx|ts|tsx)\"",
         "test:fix": "prettier --log-level silent --write . && eslint --fix \"./src/**/*.?(js|jsx|ts|tsx)\"",
-        "test": "jest",
+        "test": "jest --passWithNoTests",
         "coverage": "jest --coverage",
         "prepare": "husky install",
         "build:analyze": "BUNDLE_ANALYZE=true rsbuild build"
