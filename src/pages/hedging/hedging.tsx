@@ -3,6 +3,7 @@ import {
     LabelPairedChevronDownSmBoldIcon,
     LabelPairedPuzzlePieceTwoCaptionBoldIcon,
 } from '@deriv/quill-icons/LabelPaired';
+import { getAppId } from '@/components/shared';
 import './hedging.scss';
 
 type HedgeMode = 'over-under' | 'ups-downs' | 'high-low';
@@ -89,7 +90,7 @@ const Hedging = () => {
         setTickHistory([]);
         setMarketStats({});
         setTradeSession(null);
-        const publicSocket = new WebSocket('wss://api.derivws.com/trading/v3/options/ws/public');
+        const publicSocket = new WebSocket(`wss://ws.derivws.com/websockets/v3?app_id=${getAppId()}`);
         setTickSubscriptionActive(false);
         const handleMessage = (message: unknown) => {
             const tick = (message as TickMessage)?.tick;
@@ -216,7 +217,7 @@ const Hedging = () => {
 
                     <div className='hedging-live-canvas' aria-label='Live market tick chart'><LiveTickCanvas values={tickHistory} accent='#00e29b' /></div>
                     <div className='trade-grid'>
-                        <div className='trade-card trade-card--over'><div>↕<span>Trade Type</span></div><div><span>Stake</span><input value={overStake} onChange={event => setOverStake(event.target.value)} inputMode='decimal' /></div><select aria-label='Over trade type'><option>Over</option></select></div>
+                        <div className='trade-card trade-card--over'><div>��<span>Trade Type</span></div><div><span>Stake</span><input value={overStake} onChange={event => setOverStake(event.target.value)} inputMode='decimal' /></div><select aria-label='Over trade type'><option>Over</option></select></div>
                         <div className='trade-card trade-card--martingale'><div>▦<span>Martingale</span></div><input value={martingale} onChange={event => setMartingale(event.target.value)} inputMode='decimal' /></div>
                         <div className='trade-card trade-card--under'><div>↻<span>Trade Type</span></div><div><span>Stake</span><input value={underStake} onChange={event => setUnderStake(event.target.value)} inputMode='decimal' /></div><select aria-label='Under trade type'><option>Under</option></select></div>
                     </div>
