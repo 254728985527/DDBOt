@@ -25,6 +25,9 @@ type TLoginUrl = {
 };
 
 export const loginUrl = ({ language }: TLoginUrl) => {
+    if (typeof window !== 'undefined' && window.location.origin === window.location.origin) {
+        return `/auth/login?language=${encodeURIComponent(language)}&return_to=${encodeURIComponent(`${window.location.pathname}${window.location.search}`)}`;
+    }
     const server_url = LocalStore.get('config.server_url');
     const signup_device_cookie = new (CookieStorage as any)('signup_device');
     const signup_device = signup_device_cookie.get('signup_device');

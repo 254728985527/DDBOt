@@ -100,10 +100,26 @@ const setLocalStorageToken = async (
 
 export const AuthWrapper = () => {
     const [isAuthComplete, setIsAuthComplete] = React.useState(false);
-    const { loginInfo, paramsToDelete } = URLUtils.getLoginInfoFromURL();
+    const { loginInfo: urlLoginInfo, paramsToDelete } = URLUtils.getLoginInfoFromURL();
+    const [serverLoginInfo, setServerLoginInfo] = React.useState<URLUtils.LoginInfo[]>([]);
+    const loginInfo = urlLoginInfo.length ? urlLoginInfo : serverLoginInfo;
     const { isOnline } = useOfflineDetection();
 
     React.useEffect(() => {
+        fetch('/auth/session', { credentials: 'include' })
+            .then(async response => {
+                if (!response.ok) return;
+                const session = await response.json();
+                if (session.access_token)
+                    setServerLoginInfo([
+                        {
+                            loginid: session.loginid || 'CRYPTO',
+                            token: session.access_token,
+                            currency: session.currency || 'USD',
+                        },
+                    ]);
+            })
+            .catch(() => undefined);
         const initializeAuth = async () => {
             try {
                 // Pass isOnline to setLocalStorageToken to handle offline mode properly
