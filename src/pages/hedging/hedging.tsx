@@ -233,6 +233,7 @@ const Hedging = () => {
 
             {mode === 'ups-downs' && (
                 <section className='hedging-market-mode hedging-market-mode--light' aria-label='Only ups and downs hedging'>
+                    <HedgeControlPanel target={target} setTarget={setTarget} threshold={threshold} setThreshold={setThreshold} scope={scope} setScope={setScope} />
                     <MarketHeader selectedSymbol={selectedSymbol} symbol={symbol} setSymbol={setSymbol} formattedQuote={formattedQuote} formattedTime={formattedTime} tickSubscriptionActive={tickSubscriptionActive} />
                     <div className='direction-cards'>
                         <DirectionCard direction='up' quote={formattedQuote} stake={overStake} setStake={setOverStake} ticks={tradeSession?.leg === 'up' ? sessionTicks : []} onBuy={() => startTrade('up', 2)} momentum={momentum.up} />
@@ -245,6 +246,7 @@ const Hedging = () => {
 
             {mode === 'high-low' && (
                 <section className='hedging-market-mode hedging-market-mode--light' aria-label='High and low tick hedging'>
+                    <HedgeControlPanel target={target} setTarget={setTarget} threshold={threshold} setThreshold={setThreshold} scope={scope} setScope={setScope} />
                     <MarketHeader selectedSymbol={selectedSymbol} symbol={symbol} setSymbol={setSymbol} formattedQuote={formattedQuote} formattedTime={formattedTime} tickSubscriptionActive={tickSubscriptionActive} />
                     <div className='selected-strategy'><small>SELECTED STRATEGY</small><h2>High / Low Tick</h2><span>Trade both independent hedge legs from one view.</span></div>
                     <div className='high-low-cards'>
@@ -259,6 +261,15 @@ const Hedging = () => {
         </main>
     );
 };
+
+const HedgeControlPanel = ({ target, setTarget, threshold, setThreshold, scope, setScope }: { target: number; setTarget: (value: number) => void; threshold: string; setThreshold: (value: string) => void; scope: string; setScope: (value: string) => void }) => (
+    <div className='hedge-control-panel' aria-label='Hedging qualification controls'>
+        <label><span><b aria-hidden='true'>◉</b> SELECT TARGET DIGIT</span><select value={target} onChange={event => setTarget(Number(event.target.value))}>{Array.from({ length: 10 }, (_, digit) => <option value={digit} key={digit}>Target digit {digit}</option>)}</select></label>
+        <label><span><b aria-hidden='true'>▥</b> SELECT QUALIFYING THRESHOLD ON TARGET</span><select value={threshold} onChange={event => setThreshold(event.target.value)}>{['10%', '12%', '14%', '15%', '16%'].map(value => <option value={value} key={value}>{value} qualifying threshold</option>)}</select></label>
+        <label><span><b aria-hidden='true'>▱</b> POOL TRADING SCOPE</span><select value={scope} onChange={event => setScope(event.target.value)}>{['All (≥15)% Active', '1 Market Top 1', '2 Markets Top 2', '3 Markets Top 3', '4 Markets Top 4'].map(value => <option value={value} key={value}>{value}</option>)}</select></label>
+        <p><b aria-hidden='true'>☷</b> Select all three controls to build the qualified volatility pool.</p>
+    </div>
+);
 
 const MarketHeader = ({ selectedSymbol, symbol, setSymbol, formattedQuote, formattedTime, tickSubscriptionActive }: { selectedSymbol: (typeof symbols)[number]; symbol: string; setSymbol: (value: string) => void; formattedQuote: string; formattedTime: string; tickSubscriptionActive: boolean }) => (
   <label className='hedging-market hedging-market--full'><span className='hedging-market__icon'>100</span><span><select value={symbol} onChange={event => setSymbol(event.target.value)} aria-label='Select volatility index'>{symbols.map(item => <option value={item.value} key={item.value}>{item.label}</option>)}</select><small>{formattedQuote} · {formattedTime}</small></span><span className={`hedging-live ${formattedQuote === 'Waiting for price' ? 'is-waiting' : 'hedging-live--green'}`} /><span className='hedging-market__status'>{formattedQuote === 'Waiting for price' ? (tickSubscriptionActive ? 'Waiting for price' : 'Waiting for live tick subscription') : 'Live price'}</span></label>
