@@ -229,7 +229,7 @@ const Hedging = () => {
                         <div className='trade-card trade-card--martingale'><div>▦<span>Martingale</span></div><input value={martingale} onChange={event => setMartingale(event.target.value)} inputMode='decimal' /></div>
                         <div className='trade-card trade-card--under'><div>↻<span>Trade Type</span></div><div><span>Stake</span><input value={underStake} onChange={event => setUnderStake(event.target.value)} inputMode='decimal' /></div><select aria-label='Under trade type'><option>Under</option></select></div>
                     </div>
-                    <button className='hedging-trade-button' type='button'>Ready to trade Over + Under on tick D{target}</button>
+                    <p className='hedging-engine-hint'>Execution is controlled by the website Run button and the selected Bot Builder bot.</p>
                 </section>
             )}
 
