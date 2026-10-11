@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { api_base } from '@/external/bot-skeleton';
 import {
     LabelPairedChevronDownSmBoldIcon,
@@ -159,6 +159,7 @@ const Hedging = () => {
                         <div className='scope-grid'>{['All (≥15)% Active', '1 Market Top 1', '2 Markets Top 2', '3 Markets Top 3', '4 Markets Top 4'].map(value => <button className={scope === value ? 'is-selected' : ''} type='button' key={value} onClick={() => setScope(value)}>{value}</button>)}</div>
                     </div>
 
+                    <div className='hedging-live-canvas' aria-label='Live market tick chart'><LiveTickCanvas values={tickHistory} accent='#00e29b' /></div>
                     <div className='trade-grid'>
                         <div className='trade-card trade-card--over'><div>↕<span>Trade Type</span></div><div><span>Stake</span><input value={overStake} onChange={event => setOverStake(event.target.value)} inputMode='decimal' /></div><select aria-label='Over trade type'><option>Over</option></select></div>
                         <div className='trade-card trade-card--martingale'><div>▦<span>Martingale</span></div><input value={martingale} onChange={event => setMartingale(event.target.value)} inputMode='decimal' /></div>
@@ -198,8 +199,34 @@ const MarketHeader = ({ selectedSymbol, symbol, setSymbol, formattedQuote, forma
     <label className='hedging-market hedging-market--full'><span className='hedging-market__icon'>100</span><span><select value={symbol} onChange={event => setSymbol(event.target.value)} aria-label='Select volatility index'>{symbols.map(item => <option value={item.value} key={item.value}>{item.label}</option>)}</select><small>{formattedQuote} · {formattedTime}</small></span><span className='hedging-live hedging-live--green' /></label>
 );
 
+const LiveTickCanvas = ({ values, accent }: { values: number[]; accent: string }) => {
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const context = canvas.getContext('2d');
+        if (!context) return;
+        const ratio = window.devicePixelRatio || 1;
+        const width = canvas.clientWidth;
+        const height = canvas.clientHeight;
+        canvas.width = width * ratio;
+        canvas.height = height * ratio;
+        context.scale(ratio, ratio);
+        context.clearRect(0, 0, width, height);
+        context.strokeStyle = '#e7eef4';
+        context.lineWidth = 1;
+        for (let y = 12; y < height; y += 24) { context.beginPath(); context.moveTo(0, y); context.lineTo(width, y); context.stroke(); }
+        if (values.length < 2) return;
+        const min = Math.min(...values); const max = Math.max(...values); const range = max - min || 1;
+        context.strokeStyle = accent; context.lineWidth = 2.5; context.lineJoin = 'round'; context.beginPath();
+        values.forEach((value, index) => { const x = (index / (values.length - 1)) * width; const y = height - 12 - ((value - min) / range) * (height - 24); index ? context.lineTo(x, y) : context.moveTo(x, y); });
+        context.stroke();
+    }, [values, accent]);
+    return <canvas ref={canvasRef} className='live-tick-canvas' aria-hidden='true' />;
+};
+
 const DirectionCard = ({ direction, quote, stake, setStake, ticks, onBuy }: { direction: 'up' | 'down'; quote: string; stake: string; setStake: (value: string) => void; ticks: number[]; onBuy: () => void }) => (
-    <article className={`direction-card direction-card--${direction}`}><header><span>{direction === 'up' ? '↗ ONLY UPS' : '↘ ONLY DOWNS'}</span><small>{ticks.length ? `Live trade: ${ticks.length}/2 ticks` : 'Buy to start a 2-tick trade'}</small></header><div className='mini-chart'><span>{ticks.length ? ticks.map(value => value.toFixed(2)).join(' → ') : quote}</span><i /></div><div className='direction-stats'><span>ENTRY SPOT<br /><b>{quote}</b></span><span>CONTRACT TYPE<br /><b>0 / 2 Ticks</b></span><span>PAYOUT<br /><b>$3.82 (95%)</b></span></div><label>Stake<input value={stake} onChange={event => setStake(event.target.value)} inputMode='decimal' /></label><button type='button' onClick={onBuy} disabled={ticks.length > 0 && ticks.length < 2}>{ticks.length >= 2 ? '✓ TRADE COMPLETE' : direction === 'up' ? '▶ BUY ONLY UPS (2 TICKS)' : '▶ BUY ONLY DOWNS (2 TICKS)'} <small>{ticks.length ? `${ticks.length}/2 incoming ticks` : 'Payoff: $3.82 USD (+95%)'}</small></button></article>
+    <article className={`direction-card direction-card--${direction}`}><header><span>{direction === 'up' ? '↗ ONLY UPS' : '↘ ONLY DOWNS'}</span><small>{ticks.length ? `Live trade: ${ticks.length}/2 ticks` : 'Buy to start a 2-tick trade'}</small></header><div className='mini-chart'><LiveTickCanvas values={ticks} accent={direction === 'up' ? '#08ad75' : '#2479ef'} /><span>{ticks.length ? ticks.map(value => value.toFixed(2)).join(' → ') : quote}</span><i /></div><div className='direction-stats'><span>ENTRY SPOT<br /><b>{quote}</b></span><span>CONTRACT TYPE<br /><b>0 / 2 Ticks</b></span><span>PAYOUT<br /><b>$3.82 (95%)</b></span></div><label>Stake<input value={stake} onChange={event => setStake(event.target.value)} inputMode='decimal' /></label><button type='button' onClick={onBuy} disabled={ticks.length > 0 && ticks.length < 2}>{ticks.length >= 2 ? '✓ TRADE COMPLETE' : direction === 'up' ? '▶ BUY ONLY UPS (2 TICKS)' : '▶ BUY ONLY DOWNS (2 TICKS)'} <small>{ticks.length ? `${ticks.length}/2 incoming ticks` : 'Payoff: $3.82 USD (+95%)'}</small></button></article>
 );
 
 const TickCard = ({ label, target, stake, setStake, status, ticks, onRun }: { label: string; target: string; stake: string; setStake: (value: string) => void; status: string; ticks: number[]; onRun: () => void }) => {
@@ -213,6 +240,7 @@ const TickCard = ({ label, target, stake, setStake, status, ticks, onRun }: { la
                 <em className={status === 'LOSS' ? 'is-loss' : ''}>{status}</em>
             </header>
             <div className={`tick-chart tick-chart--${is_high ? 'high' : 'low'}`}>
+                <LiveTickCanvas values={ticks} accent={is_high ? '#347edb' : '#ff4860'} />
                 <span className='tick-chart__title'>{ticks.length ? `Incoming ticks ${ticks.length}/5: ${ticks.map(value => value.toFixed(2)).join(' → ')}` : `Tick 5: ${is_high ? 'Highest' : 'Lowest'} Tick`}</span>
                 <span className='tick-chart__start'>Start</span><span className='tick-chart__exit'>Exit Tick</span>
                 <i /><b />
