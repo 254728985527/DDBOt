@@ -176,6 +176,10 @@ window.Blockly.JavaScript.javascriptGenerator.forBlock.trade_definition = block 
     const restart_on_buy_sell_block = block.getChildByType('trade_definition_restartbuysell');
 
     const symbol = market_block.getFieldValue('SYMBOL_LIST');
+    const pool_enabled = market_block.getFieldValue('POOL_ENABLED') !== 'FALSE';
+    const target_digit = Number(market_block.getFieldValue('TARGET_DIGIT') ?? 0);
+    const qualifying_threshold = Number(market_block.getFieldValue('QUALIFYING_THRESHOLD') ?? 10);
+    const pool_trade_scope = market_block.getFieldValue('POOL_TRADE_SCOPE') ?? 'all_gt_15';
     const trade_type = trade_type_block.getFieldValue('TRADETYPE_LIST');
     const contract_type = contract_type_block.getFieldValue('TYPE_LIST');
     const candle_interval = candle_interval_block.getFieldValue('CANDLEINTERVAL_LIST');
@@ -195,6 +199,10 @@ window.Blockly.JavaScript.javascriptGenerator.forBlock.trade_definition = block 
     BinaryBotPrivateInit = function BinaryBotPrivateInit() {
         Bot.init('${account}', {
           symbol              : '${symbol}',
+          poolEnabled         : ${pool_enabled},
+          targetDigit         : ${target_digit},
+          qualifyingThreshold : ${qualifying_threshold},
+          poolTradeScope      : '${pool_trade_scope}',
           contractTypes       : ${JSON.stringify(contract_type_list)},
           candleInterval      : '${candle_interval || 'FALSE'}',
           shouldRestartOnError: ${should_restart_on_error},

@@ -37,6 +37,35 @@ const watchDuring = store =>
  * which leads to the same problem we try to solve. So prevTick is isolated
  */
 let prevTick;
+
+const selectPoolMarket = (configuredSymbol, tradeOptions) => {
+    if (!tradeOptions?.poolEnabled || typeof window === 'undefined') return configuredSymbol;
+
+    const marketPercentages = window.marketPercentages;
+    if (!marketPercentages || typeof marketPercentages !== 'object') return configuredSymbol;
+
+    const configuredThreshold = Number(tradeOptions.qualifyingThreshold ?? 10);
+    const scope = tradeOptions.poolTradeScope ?? 'all_gt_15';
+    const threshold = scope === 'all_gt_15' ? Math.max(configuredThreshold, 15) : configuredThreshold;
+    const candidates = Object.entries(marketPercentages)
+        .map(([symbol, value]) => {
+            const metrics = typeof value === 'number' ? { botVariable: value } : (value ?? {});
+            const percentages = [metrics.lastDigit, metrics.directional, metrics.botVariable].map(Number);
+            const allMetricsAvailable = percentages.every(Number.isFinite);
+            const qualifies = allMetricsAvailable && percentages.every(percentage => percentage >= threshold);
+            return {
+                symbol,
+                score: allMetricsAvailable ? percentages.reduce((sum, percentage) => sum + percentage, 0) / 3 : 0,
+                qualifies,
+            };
+        })
+        .filter(candidate => candidate.qualifies)
+        .sort((left, right) => right.score - left.score);
+
+    const scopedCandidates = scope === 'all_gt_15' ? candidates : candidates.slice(0, Math.max(1, Number(scope) || 1));
+    return scopedCandidates[0]?.symbol ?? configuredSymbol;
+};
+
 const watchScope = ({ store, stopScope, passScope, passFlag }) => {
     // in case watch is called after stop is fired
     if (store.getState().scope === stopScope) {
@@ -97,7 +126,15 @@ export default class TradeEngine extends Balance(Purchase(Sell(OpenContract(Prop
 
         const validated_trade_options = this.validateTradeOptions(tradeOptions);
 
-        this.tradeOptions = { ...validated_trade_options, symbol: this.options.symbol };
+        const poolSymbol = selectPoolMarket(this.options.symbol, {
+            ...this.options,
+            ...validated_trade_options,
+            poolEnabled: validated_trade_options.poolEnabled ?? validated_trade_options.POOL_ENABLED,
+            qualifyingThreshold:
+                validated_trade_options.qualifyingThreshold ?? validated_trade_options.QUALIFYING_THRESHOLD,
+            poolTradeScope: validated_trade_options.poolTradeScope ?? validated_trade_options.POOL_TRADE_SCOPE,
+        });
+        this.tradeOptions = { ...validated_trade_options, symbol: poolSymbol };
         this.store.dispatch(start());
         this.checkLimits(validated_trade_options);
 
