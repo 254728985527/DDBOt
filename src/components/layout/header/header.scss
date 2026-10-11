@@ -184,6 +184,101 @@
     &__button {
         margin-inline-end: 0.8rem;
 
+        .app-id-modal__backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 1001;
+            display: grid;
+            place-items: center;
+            padding: 2rem;
+            background: #081427;
+        }
+
+        .app-id-modal {
+            width: min(100%, 88rem);
+            padding: 3.8rem 4.8rem;
+            border: 0.2rem solid #1454a4;
+            border-radius: 2rem;
+            background: linear-gradient(145deg, #101d35, #071326);
+            box-shadow: 0 1.5rem 4rem rgb(0 12 35 / 48%);
+            color: #edf5ff;
+        }
+
+        .app-id-modal__close {
+            float: right;
+            border: 0;
+            background: transparent;
+            color: #d7e6ff;
+            font-size: 3rem;
+            line-height: 1;
+            cursor: pointer;
+        }
+
+        .app-id-modal__title {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            margin-bottom: 3.8rem;
+        }
+
+        .app-id-modal__title span {
+            color: #20c9ff;
+            font-size: 4rem;
+        }
+
+        .app-id-modal h2 {
+            margin: 0;
+            font-size: 3.3rem;
+        }
+
+        .app-id-modal h2 a {
+            color: #21baff;
+            text-decoration: underline;
+            text-underline-offset: 0.5rem;
+        }
+
+        .app-id-modal label {
+            display: block;
+            margin: 1.8rem 0 0.8rem;
+            font-size: 1.6rem;
+            font-weight: 700;
+        }
+
+        .app-id-modal input {
+            display: block;
+            width: 100%;
+            padding: 1.4rem 1.8rem;
+            border: 0.2rem solid #25519a;
+            border-radius: 1.2rem;
+            background: transparent;
+            color: #edf5ff;
+            font-size: 1.5rem;
+        }
+
+        .app-id-modal input:focus {
+            border-color: #1ccaff;
+            outline: none;
+            box-shadow: 0 0 0 0.2rem rgb(28 202 255 / 20%);
+        }
+
+        .app-id-modal input::placeholder {
+            color: #7594c9;
+        }
+
+        .app-id-modal__actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 2.2rem;
+        }
+
+        .app-id-modal__actions button {
+            min-width: 9rem;
+            min-height: 3.8rem;
+            border-radius: 0.7rem;
+            font-weight: 700;
+        }
+
         .api-token-modal__backdrop {
             position: fixed;
             inset: 0;

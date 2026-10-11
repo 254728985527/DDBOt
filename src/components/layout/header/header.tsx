@@ -38,6 +38,10 @@ const AppHeader = observer(({ isAuthenticating }: TAppHeaderProps) => {
     const { accounts, getCurrency, is_virtual } = client ?? {};
     const has_wallet = Object.keys(accounts ?? {}).some(id => accounts?.[id].account_category === 'wallet');
     const [isTokenModalOpen, setIsTokenModalOpen] = useState(false);
+    const [isAppIdModalOpen, setIsAppIdModalOpen] = useState(false);
+    const [appId, setAppId] = useState('34DmCFChY0gCQkERvwyKd');
+    const [redirectUrl, setRedirectUrl] = useState('');
+    const [websiteUrl, setWebsiteUrl] = useState('');
     const [apiToken, setApiToken] = useState('');
     const [tokenError, setTokenError] = useState('');
     const [isConnectingToken, setIsConnectingToken] = useState(false);
@@ -51,6 +55,26 @@ const AppHeader = observer(({ isAuthenticating }: TAppHeaderProps) => {
     const { onRenderTMBCheck, isTmbEnabled } = useTMB();
     const is_tmb_enabled = isTmbEnabled() || window.is_tmb_enabled === true;
     // No need for additional state management here since we're handling it in the layout component
+
+    const startAppIdLogin = async () => {
+        clearAuthData(false);
+        const query_param_currency =
+            new URLSearchParams(window.location.search).get('account') ||
+            sessionStorage.getItem('query_param_currency') ||
+            'USD';
+        try {
+            if (await isTmbEnabled()) return onRenderTMBCheck(true);
+            await requestOidcAuthentication({
+                redirectCallbackUri: redirectUrl || `${window.location.origin}/callback`,
+                ...(query_param_currency
+                    ? { state: { account: query_param_currency, app_id: appId, website_url: websiteUrl } }
+                    : {}),
+            });
+        } catch (error) {
+            handleOidcAuthFailure(error);
+            window.location.replace(generateOAuthURL());
+        }
+    };
 
     const renderAccountSection = useCallback(() => {
         // Show loader during authentication processes
@@ -144,42 +168,7 @@ const AppHeader = observer(({ isAuthenticating }: TAppHeaderProps) => {
                     <Button
                         className='auth-action auth-action--login'
                         tertiary
-                        onClick={async () => {
-                            clearAuthData(false);
-                            const getQueryParams = new URLSearchParams(window.location.search);
-                            const currency = getQueryParams.get('account') ?? '';
-                            const query_param_currency =
-                                currency || sessionStorage.getItem('query_param_currency') || 'USD';
-
-                            try {
-                                // First, explicitly wait for TMB status to be determined
-                                const tmbEnabled = await isTmbEnabled();
-                                // Now use the result of the explicit check
-                                if (tmbEnabled) {
-                                    await onRenderTMBCheck(true); // Pass true to indicate it's from login button
-                                } else {
-                                    // Always use OIDC if TMB is not enabled
-                                    try {
-                                        await requestOidcAuthentication({
-                                            redirectCallbackUri: `${window.location.origin}/callback`,
-                                            ...(query_param_currency
-                                                ? {
-                                                      state: {
-                                                          account: query_param_currency,
-                                                      },
-                                                  }
-                                                : {}),
-                                        });
-                                    } catch (err) {
-                                        handleOidcAuthFailure(err);
-                                        window.location.replace(generateOAuthURL());
-                                    }
-                                }
-                            } catch (error) {
-                                // eslint-disable-next-line no-console
-                                console.error(error);
-                            }
-                        }}
+                        onClick={() => setIsAppIdModalOpen(true)}
                     >
                         <Localize i18n_default_text='Log in' />
                     </Button>
@@ -197,9 +186,7 @@ const AppHeader = observer(({ isAuthenticating }: TAppHeaderProps) => {
                     <Button
                         className='auth-action auth-action--signup'
                         primary
-                        onClick={() => {
-                            window.open(standalone_routes.signup);
-                        }}
+                        onClick={() => window.open(standalone_routes.signup)}
                     >
                         <Localize i18n_default_text='Sign up' />
                     </Button>
@@ -273,6 +260,71 @@ const AppHeader = observer(({ isAuthenticating }: TAppHeaderProps) => {
                 {!isDesktop && <PWAInstallButton variant='primary' size='medium' />}
                 {renderAccountSection()}
             </Wrapper>
+            {isAppIdModalOpen && (
+                <div
+                    className='app-id-modal__backdrop'
+                    role='presentation'
+                    onMouseDown={event => event.target === event.currentTarget && setIsAppIdModalOpen(false)}
+                >
+                    <section className='app-id-modal' role='dialog' aria-modal='true' aria-labelledby='app-id-title'>
+                        <button
+                            className='app-id-modal__close'
+                            type='button'
+                            aria-label='Close App ID dialog'
+                            onClick={() => setIsAppIdModalOpen(false)}
+                        >
+                            ×
+                        </button>
+                        <div className='app-id-modal__title'>
+                            <span aria-hidden='true'>◇</span>
+                            <h2 id='app-id-title'>
+                                Log in with{' '}
+                                <a href='https://developers.deriv.com/' target='_blank' rel='noreferrer'>
+                                    App ID
+                                </a>
+                            </h2>
+                        </div>
+                        <label htmlFor='app-id-input'>App ID</label>
+                        <input
+                            id='app-id-input'
+                            value={appId}
+                            onChange={event => setAppId(event.target.value)}
+                            placeholder='34DmCFChY0gCQkERvwyKd'
+                        />
+                        <label htmlFor='redirect-url-input'>Redirect URL</label>
+                        <input
+                            id='redirect-url-input'
+                            value={redirectUrl}
+                            onChange={event => setRedirectUrl(event.target.value)}
+                            placeholder='https://your-redirect-url.com'
+                            type='url'
+                        />
+                        <label htmlFor='website-url-input'>Website URL</label>
+                        <input
+                            id='website-url-input'
+                            value={websiteUrl}
+                            onChange={event => setWebsiteUrl(event.target.value)}
+                            placeholder='https://your-website-url.com'
+                            type='url'
+                        />
+                        <div className='app-id-modal__actions'>
+                            <Button tertiary onClick={() => setIsAppIdModalOpen(false)}>
+                                Cancel
+                            </Button>
+                            <Button
+                                primary
+                                disabled={!appId.trim()}
+                                onClick={() => {
+                                    setIsAppIdModalOpen(false);
+                                    void startAppIdLogin();
+                                }}
+                            >
+                                Continue
+                            </Button>
+                        </div>
+                    </section>
+                </div>
+            )}
             {isTokenModalOpen && (
                 <div
                     className='api-token-modal__backdrop'
