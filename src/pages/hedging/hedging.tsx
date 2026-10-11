@@ -60,6 +60,11 @@ const Hedging = () => {
     const [epoch, setEpoch] = useState<number | null>(null);
     const [tickHistory, setTickHistory] = useState<number[]>([]);
     const [tradeSession, setTradeSession] = useState<{ leg: string; ticks: number[]; total: number } | null>(null);
+    const [canvasZoom, setCanvasZoom] = useState(1);
+
+    const zoomCanvas = (delta: number) => {
+        setCanvasZoom(current => Math.min(1.35, Math.max(0.75, Number((current + delta).toFixed(2)))));
+    };
 
     useEffect(() => {
         setQuote(null);
@@ -120,6 +125,18 @@ const Hedging = () => {
                 ))}
             </section>
 
+            <section className='hedging-canvas' aria-label='Hedging strategy canvas'>
+                <div className='hedging-canvas__toolbar'>
+                    <span>Strategy canvas</span>
+                    <div className='hedging-canvas__zoom' aria-label='Canvas zoom controls'>
+                        <button type='button' onClick={() => zoomCanvas(-0.1)} aria-label='Zoom out'>−</button>
+                        <output>{Math.round(canvasZoom * 100)}%</output>
+                        <button type='button' onClick={() => zoomCanvas(0.1)} aria-label='Zoom in'>+</button>
+                        <button type='button' onClick={() => setCanvasZoom(1)} aria-label='Reset zoom'>Reset</button>
+                    </div>
+                </div>
+                <div className='hedging-canvas__viewport'>
+                    <div className='hedging-canvas__stage' style={{ transform: `scale(${canvasZoom})` }}>
             {mode === 'over-under' && (
                 <section className='hedging-panel' aria-label='Over and under hedging setup'>
                     <div className='hedging-panel__top'>
@@ -191,6 +208,9 @@ const Hedging = () => {
                     </div>
                 </section>
             )}
+                    </div>
+                </div>
+            </section>
         </main>
     );
 };
