@@ -75,6 +75,7 @@ const Hedging = () => {
     const [epoch, setEpoch] = useState<number | null>(null);
     const [tickHistory, setTickHistory] = useState<number[]>([]);
     const [marketStats, setMarketStats] = useState<Record<string, MarketStats>>({});
+    const [tickSubscriptionActive, setTickSubscriptionActive] = useState(false);
     const [poolRunning, setPoolRunning] = useState(false);
     const [tradeSession, setTradeSession] = useState<{ leg: string; ticks: number[]; total: number } | null>(null);
     const [canvasZoom, setCanvasZoom] = useState(1);
@@ -90,6 +91,7 @@ const Hedging = () => {
         setMarketStats({});
         setTradeSession(null);
         const api = api_base.api;
+        setTickSubscriptionActive(Boolean(api));
         if (!api) return;
         const handleMessage = (message: unknown) => {
             const tick = (message as TickMessage)?.tick;
@@ -113,6 +115,7 @@ const Hedging = () => {
         return () => {
             subscription?.unsubscribe();
             volatilitySymbols.forEach(item => api.send({ forget_all: 'ticks' }));
+            setTickSubscriptionActive(false);
         };
     }, [symbol]);
 
@@ -175,7 +178,7 @@ const Hedging = () => {
                                 </select>
                                 <small>{formattedQuote} · {formattedTime}</small>
                             </span>
-                            <span className='hedging-live' aria-label='Live tick connection' />
+                            <span className={`hedging-live ${quote === null ? 'is-waiting' : 'hedging-live--green'}`} aria-label={tickSubscriptionActive ? 'Subscribed to live tick WebSocket' : 'Waiting for live tick WebSocket'} /><span className='hedging-market__status'>{quote === null ? (tickSubscriptionActive ? 'Waiting for price' : 'Waiting for live tick subscription') : 'Live price'}</span>
                         </label>
                     </div>
 
@@ -216,7 +219,7 @@ const Hedging = () => {
 
             {mode === 'ups-downs' && (
                 <section className='hedging-market-mode hedging-market-mode--light' aria-label='Only ups and downs hedging'>
-                    <MarketHeader selectedSymbol={selectedSymbol} symbol={symbol} setSymbol={setSymbol} formattedQuote={formattedQuote} formattedTime={formattedTime} />
+                    <MarketHeader selectedSymbol={selectedSymbol} symbol={symbol} setSymbol={setSymbol} formattedQuote={formattedQuote} formattedTime={formattedTime} tickSubscriptionActive={tickSubscriptionActive} />
                     <div className='direction-cards'>
                         <DirectionCard direction='up' quote={formattedQuote} stake={overStake} setStake={setOverStake} ticks={tradeSession?.leg === 'up' ? sessionTicks : []} onBuy={() => startTrade('up', 2)} />
                         <DirectionCard direction='down' quote={formattedQuote} stake={underStake} setStake={setUnderStake} ticks={tradeSession?.leg === 'down' ? sessionTicks : []} onBuy={() => startTrade('down', 2)} />
@@ -228,7 +231,7 @@ const Hedging = () => {
 
             {mode === 'high-low' && (
                 <section className='hedging-market-mode hedging-market-mode--light' aria-label='High and low tick hedging'>
-                    <MarketHeader selectedSymbol={selectedSymbol} symbol={symbol} setSymbol={setSymbol} formattedQuote={formattedQuote} formattedTime={formattedTime} />
+                    <MarketHeader selectedSymbol={selectedSymbol} symbol={symbol} setSymbol={setSymbol} formattedQuote={formattedQuote} formattedTime={formattedTime} tickSubscriptionActive={tickSubscriptionActive} />
                     <div className='selected-strategy'><small>SELECTED STRATEGY</small><h2>High / Low Tick</h2><span>Trade both independent hedge legs from one view.</span></div>
                     <div className='high-low-cards'>
                         <TickCard label='High Tick' target='Peak Target: #5' stake={overStake} setStake={setOverStake} status='READY' ticks={tradeSession?.leg === 'high' ? sessionTicks : []} onRun={() => startTrade('high', 5)} />
@@ -243,9 +246,9 @@ const Hedging = () => {
     );
 };
 
-const MarketHeader = ({ selectedSymbol, symbol, setSymbol, formattedQuote, formattedTime }: { selectedSymbol: (typeof symbols)[number]; symbol: string; setSymbol: (value: string) => void; formattedQuote: string; formattedTime: string }) => (
-    <label className='hedging-market hedging-market--full'><span className='hedging-market__icon'>100</span><span><select value={symbol} onChange={event => setSymbol(event.target.value)} aria-label='Select volatility index'>{symbols.map(item => <option value={item.value} key={item.value}>{item.label}</option>)}</select><small>{formattedQuote} · {formattedTime}</small></span><span className='hedging-live hedging-live--green' /></label>
-);
+const MarketHeader = ({ selectedSymbol, symbol, setSymbol, formattedQuote, formattedTime, tickSubscriptionActive }: { selectedSymbol: (typeof symbols)[number]; symbol: string; setSymbol: (value: string) => void; formattedQuote: string; formattedTime: string; tickSubscriptionActive: boolean }) => (
+  <label className='hedging-market hedging-market--full'><span className='hedging-market__icon'>100</span><span><select value={symbol} onChange={event => setSymbol(event.target.value)} aria-label='Select volatility index'>{symbols.map(item => <option value={item.value} key={item.value}>{item.label}</option>)}</select><small>{formattedQuote} · {formattedTime}</small></span><span className={`hedging-live ${formattedQuote === 'Waiting for price' ? 'is-waiting' : 'hedging-live--green'}`} /><span className='hedging-market__status'>{formattedQuote === 'Waiting for price' ? (tickSubscriptionActive ? 'Waiting for price' : 'Waiting for live tick subscription') : 'Live price'}</span></label>
+  );
 
 const LiveTickCanvas = ({ values, accent }: { values: number[]; accent: string }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
