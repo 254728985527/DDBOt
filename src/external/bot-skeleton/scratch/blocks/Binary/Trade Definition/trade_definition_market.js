@@ -13,6 +13,21 @@ window.Blockly.Blocks.trade_definition_market = {
             }),
             args0: [
                 {
+                    type: 'field_checkbox',
+                    name: 'MANUAL_DIGIT_ENABLED',
+                    checked: false,
+                    class: 'manualDigitToggle',
+                },
+                {
+                    type: 'field_number',
+                    name: 'MANUAL_DIGIT',
+                    value: 0,
+                    min: 0,
+                    max: 9,
+                    precision: 1,
+                    class: 'manualDigitInput',
+                },
+                {
                     type: 'field_dropdown',
                     name: 'MARKET_LIST',
                     options: [['', '']],
@@ -37,6 +52,7 @@ window.Blockly.Blocks.trade_definition_market = {
 
         this.setMovable(false);
         this.setDeletable(false);
+        this.getField('MANUAL_DIGIT').setVisible(false);
     },
     customContextMenu(menu) {
         const menu_items = [localize('Enable Block'), localize('Disable Block')];
@@ -61,6 +77,16 @@ window.Blockly.Blocks.trade_definition_market = {
 
         const { active_symbols } = ApiHelpers?.instance ?? {};
         if (!active_symbols) return;
+
+        const manual_digit_toggle = this.getField('MANUAL_DIGIT_ENABLED');
+        const manual_digit_input = this.getField('MANUAL_DIGIT');
+        const manual_digit_enabled = manual_digit_toggle?.getValue() === 'TRUE';
+        manual_digit_input?.setVisible(manual_digit_enabled);
+        if (manual_digit_enabled && (event.blockId === this.id || event.type === window.Blockly.Events.BLOCK_CREATE)) {
+            const trade_options = this.getRootBlock()?.getChildByType('trade_definition_tradeoptions');
+            const prediction_block = trade_options?.getInput('PREDICTION')?.connection?.targetBlock();
+            if (prediction_block) prediction_block.setFieldValue(manual_digit_input.getValue(), 'NUM');
+        }
 
         const market_dropdown = this.getField('MARKET_LIST');
         const submarket_dropdown = this.getField('SUBMARKET_LIST');

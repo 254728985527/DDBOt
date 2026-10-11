@@ -56,6 +56,16 @@ $colour_toolboxSelected: $black;
     filter: unset;
 }
 
+.manualDigitToggle {
+    fill: #facc15 !important;
+    color: #713f12 !important;
+}
+
+.manualDigitInput {
+    fill: #fef08a !important;
+    color: #713f12 !important;
+}
+
 .zelos-renderer.zelos_renderer-theme,
 .flyout .zelos-renderer.classic-theme,
 .gtm-search-results,
