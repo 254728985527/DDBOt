@@ -155,10 +155,12 @@ const FreeBots = observer(() => {
     return (
         <div className='free-bots'>
             <div className='free-bots__header'>
-                <h1 className='free-bots__title'>Free Trading Bots</h1>
-                <p className='free-bots__subtitle'>
-                    Explore our collection of pre-built trading bots. Click on any bot to load it into the Bot Builder.
-                </p>
+                <div>
+                    <span className='free-bots__eyebrow'>DERIV BOT</span>
+                    <h1 className='free-bots__title'>Bots</h1>
+                    <p className='free-bots__subtitle'>Choose a ready-made bot to load every block into Bot Builder.</p>
+                </div>
+                <span className='free-bots__count'>{filteredBots.length} bots</span>
             </div>
 
             <div className='free-bots__categories'>
@@ -177,7 +179,7 @@ const FreeBots = observer(() => {
                 {filteredBots.map(bot => (
                     <div key={bot.id} className='free-bots__card'>
                         <div className='free-bots__card-header'>
-                            <span className='free-bots__card-icon'>{bot.icon}</span>
+                            <span className='free-bots__card-icon' aria-hidden='true'>{bot.name.charAt(0)}</span>
                             <span className='free-bots__card-category'>{bot.category}</span>
                         </div>
                         <h3 className='free-bots__card-title'>{bot.name}</h3>
@@ -191,7 +193,7 @@ const FreeBots = observer(() => {
                                 <span className='free-bots__card-btn-loading'>Loading...</span>
                             ) : (
                                 <>
-                                    <span>Load Bot</span>
+                                    <span>Open in Bot Builder</span>
                                     <svg
                                         width='16'
                                         height='16'
