@@ -137,39 +137,27 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
 
     const requestSubscribe = async (req: TicksStreamRequest, callback: (data: any) => void) => {
         if (!req.ticks_history || req.ticks_history === 'undefined' || req.ticks_history === '') return;
-        try {
-            requestForgetStream(chartSubscriptionIdRef.current);
-            const api = await chart_api.init();
-            if (!api?.connection || api.connection.readyState !== WebSocket.OPEN) return;
-            const history = await api.send(req);
-            setChartSubscriptionId(history?.subscription.id);
-            if (history) callback(history);
-            if (req.subscribe === 1 && history?.subscription?.id) {
-                const subscriptionId = history.subscription.id;
-                const publicSocket = new WebSocket(PUBLIC_MARKET_DATA_URL);
-                publicTickSockets[subscriptionId] = publicSocket;
-                publicSocket.addEventListener('open', () => {
-                    publicSocket.send(JSON.stringify({ ticks: req.ticks_history, subscribe: 1 }));
-                });
-                publicSocket.addEventListener('close', () => {
-                    if (publicTickSockets[subscriptionId] === publicSocket) delete publicTickSockets[subscriptionId];
-                });
-                publicSocket.addEventListener('message', event => {
-                    try {
-                        callback(JSON.parse(event.data as string));
-                    } catch {
-                        // Ignore non-JSON public gateway frames.
-                    }
-                });
-                publicSocket.addEventListener('error', () => {
-                    publicSocket.close();
-                });
+        requestForgetStream(chartSubscriptionIdRef.current);
+        const subscriptionId = `public-${req.ticks_history}`;
+        const publicSocket = new WebSocket(PUBLIC_MARKET_DATA_URL);
+        publicTickSockets[subscriptionId] = publicSocket;
+        setChartSubscriptionId(subscriptionId);
+        publicSocket.addEventListener('open', () => {
+            publicSocket.send(JSON.stringify({ ...req, subscribe: req.subscribe === 1 ? 1 : 0 }));
+        });
+        publicSocket.addEventListener('message', event => {
+            try {
+                const message = JSON.parse(event.data as string);
+                if (message.error) return;
+                callback(message);
+            } catch {
+                // Ignore non-JSON public gateway frames.
             }
-        } catch (e) {
-            // eslint-disable-next-line no-console
-            (e as TError)?.error?.code === 'MarketIsClosed' && callback([]); //if market is closed sending a empty array  to resolve
-            // MarketIsClosed is represented by an empty chart response; other request errors are handled by SmartChart.
-        }
+        });
+        publicSocket.addEventListener('close', () => {
+            if (publicTickSockets[subscriptionId] === publicSocket) delete publicTickSockets[subscriptionId];
+        });
+        publicSocket.addEventListener('error', () => publicSocket.close());
     };
 
     if (!symbol || !isChartApiReady || !chart_api.api) {
