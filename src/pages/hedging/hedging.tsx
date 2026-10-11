@@ -65,6 +65,8 @@ const Hedging = observer(() => {
     const runIsOn = run_panel.is_running || run_panel.has_open_contract;
     const runStateRef = useRef(runIsOn);
     const previousRunState = useRef(runIsOn);
+    const previousOpenContract = useRef(run_panel.has_open_contract);
+    const previousRunning = useRef(run_panel.is_running);
     useEffect(() => {
         runStateRef.current = runIsOn;
         if (!runIsOn && previousRunState.current) {
@@ -79,6 +81,7 @@ const Hedging = observer(() => {
     }, [runIsOn]);
     const [mode, setMode] = useState<HedgeMode>('high-low');
     const [symbol, setSymbol] = useState('1HZ100V');
+    const [activeQualifiedMarket, setActiveQualifiedMarket] = useState<string | null>(null);
     const [target, setTarget] = useState(4);
     const [threshold, setThreshold] = useState('15%');
     const [scope, setScope] = useState('All (≥15)% Active');
@@ -235,6 +238,30 @@ const Hedging = observer(() => {
         [marketStats, target, threshold]
     );
     const tradingMarkets = useMemo(() => qualifiedMarkets.slice(0, scopeLimit(scope)), [qualifiedMarkets, scope]);
+    const tradingMarketValues = useMemo(() => tradingMarkets.map(item => item.value), [tradingMarkets]);
+    const selectedTradingSymbol = activeQualifiedMarket ?? tradingMarketValues[0] ?? symbol;
+
+    useEffect(() => {
+        const contractSettled = previousOpenContract.current && !run_panel.has_open_contract;
+        const runStarted = run_panel.is_running && !previousRunning.current;
+        if (run_panel.is_running && !run_panel.has_open_contract && (runStarted || contractSettled)) {
+            setActiveQualifiedMarket(current => {
+                if (!tradingMarketValues.length) return null;
+                const currentIndex = current ? tradingMarketValues.indexOf(current) : -1;
+                const nextIndex = currentIndex >= 0 ? (currentIndex + 1) % tradingMarketValues.length : 0;
+                return tradingMarketValues[nextIndex];
+            });
+        }
+        previousOpenContract.current = run_panel.has_open_contract;
+        previousRunning.current = run_panel.is_running;
+    }, [run_panel.is_running, run_panel.has_open_contract, tradingMarketValues]);
+
+    useEffect(() => {
+        if (run_panel.is_running && !run_panel.has_open_contract && selectedTradingSymbol !== symbol) {
+            setSymbol(selectedTradingSymbol);
+        }
+    }, [run_panel.is_running, run_panel.has_open_contract, selectedTradingSymbol, symbol]);
+
     const momentum = useMemo(() => {
         const changes = tickHistory
             .slice(1)
@@ -353,7 +380,11 @@ const Hedging = observer(() => {
                                                 inputMode='numeric'
                                                 value={predictionDigit}
                                                 disabled={!manualPrediction}
-                                                onChange={event => setPredictionDigit(event.target.value.replace(/[^0-9]/g, '').slice(0, 1))}
+                                                onChange={event =>
+                                                    setPredictionDigit(
+                                                        event.target.value.replace(/[^0-9]/g, '').slice(0, 1)
+                                                    )
+                                                }
                                                 aria-label='Manual trade digit'
                                             />
                                         </label>
