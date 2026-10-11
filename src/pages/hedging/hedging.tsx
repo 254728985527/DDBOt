@@ -3,7 +3,6 @@ import {
     LabelPairedChevronDownSmBoldIcon,
     LabelPairedPuzzlePieceTwoCaptionBoldIcon,
 } from '@deriv/quill-icons/LabelPaired';
-import { getAppId } from '@/components/shared';
 import './hedging.scss';
 
 type HedgeMode = 'over-under' | 'ups-downs' | 'high-low';
@@ -90,7 +89,7 @@ const Hedging = () => {
         setTickHistory([]);
         setMarketStats({});
         setTradeSession(null);
-        const publicSocket = new WebSocket(`wss://ws.derivws.com/websockets/v3?app_id=${getAppId()}`);
+        const publicSocket = new WebSocket('wss://api.derivws.com/trading/v1/options/ws/public');
         setTickSubscriptionActive(false);
         const handleMessage = (message: unknown) => {
             const tick = (message as TickMessage)?.tick;
