@@ -135,7 +135,9 @@ const AppHeader = observer(({ isAuthenticating }: TAppHeaderProps) => {
         } else {
             return (
                 <div className='auth-actions'>
+                    <span className='auth-status-dot' aria-hidden='true' />
                     <Button
+                        className='auth-action auth-action--login'
                         tertiary
                         onClick={async () => {
                             clearAuthData(false);
@@ -177,6 +179,16 @@ const AppHeader = observer(({ isAuthenticating }: TAppHeaderProps) => {
                         <Localize i18n_default_text='Log in' />
                     </Button>
                     <Button
+                        className='auth-action auth-action--token'
+                        tertiary
+                        onClick={() => {
+                            window.open(`${standalone_routes.account_settings}?section=api-token`, '_self');
+                        }}
+                    >
+                        <Localize i18n_default_text='Use API token' />
+                    </Button>
+                    <Button
+                        className='auth-action auth-action--signup'
                         primary
                         onClick={() => {
                             window.open(standalone_routes.signup);
