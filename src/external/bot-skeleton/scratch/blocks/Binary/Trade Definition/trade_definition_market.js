@@ -7,7 +7,7 @@ window.Blockly.Blocks.trade_definition_market = {
     init() {
         this.jsonInit({
             message0: localize(
-                '{{ manual_digit_toggle }} {{ manual_digit }} Market: {{ input_market }} > {{ input_submarket }} > {{ input_symbol }}',
+                'Manual digit: {{ manual_digit_toggle }} {{ manual_digit }} Market: {{ input_market }} > {{ input_submarket }} > {{ input_symbol }}',
                 {
                     manual_digit_toggle: '%1',
                     manual_digit: '%2',
@@ -21,7 +21,7 @@ window.Blockly.Blocks.trade_definition_market = {
                     type: 'field_checkbox',
                     name: 'MANUAL_DIGIT_ENABLED',
                     checked: false,
-                    class: 'manualDigitToggle',
+                    class: 'blocklyCheckbox',
                 },
                 {
                     type: 'field_number',
@@ -57,7 +57,7 @@ window.Blockly.Blocks.trade_definition_market = {
 
         this.setMovable(false);
         this.setDeletable(false);
-        this.getField('MANUAL_DIGIT').setVisible(false);
+        this.getField('MANUAL_DIGIT').setVisible(true);
     },
     customContextMenu(menu) {
         const menu_items = [localize('Enable Block'), localize('Disable Block')];
