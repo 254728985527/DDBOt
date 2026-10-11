@@ -92,7 +92,7 @@ const Hedging = observer(() => {
     const [predictionDigit, setPredictionDigit] = useState('5');
     const [quote, setQuote] = useState<number | null>(null);
     const [epoch, setEpoch] = useState<number | null>(null);
-    const MAX_HEDGE_TICKS = 5;
+    const MAX_HEDGE_TICKS = 2;
     const [tickHistory, setTickHistory] = useState<number[]>([]);
     const tickKeysRef = useRef(new Set<string>());
     const [marketStats, setMarketStats] = useState<Record<string, MarketStats>>({});
