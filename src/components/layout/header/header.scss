@@ -184,6 +184,94 @@
     &__button {
         margin-inline-end: 0.8rem;
 
+        .api-token-modal__backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            display: grid;
+            place-items: center;
+            padding: 1rem;
+            background: rgb(8 22 38 / 42%);
+        }
+
+        .api-token-modal {
+            position: relative;
+            width: min(100%, 41rem);
+            padding: 2.8rem 2.6rem 2.4rem;
+            border-radius: 1rem;
+            background: #fff;
+            box-shadow: 0 1.5rem 4rem rgb(8 32 52 / 25%);
+            color: #30343b;
+        }
+
+        .api-token-modal__close {
+            position: absolute;
+            top: 1.6rem;
+            right: 1.8rem;
+            border: 0;
+            background: transparent;
+            color: #30343b;
+            font-size: 2.8rem;
+            line-height: 1;
+            cursor: pointer;
+        }
+
+        .api-token-modal h2 {
+            margin: 0 3rem 2rem 0;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .api-token-modal label {
+            display: block;
+            margin-bottom: 0.9rem;
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+
+        .api-token-modal textarea {
+            display: block;
+            width: 100%;
+            min-height: 6.5rem;
+            resize: vertical;
+            padding: 1.2rem;
+            border: 0.1rem solid #d4d7db;
+            border-radius: 0.8rem;
+            color: #30343b;
+            font: inherit;
+        }
+
+        .api-token-modal textarea::placeholder {
+            color: #62666c;
+        }
+
+        .api-token-modal p {
+            margin: 1.8rem 0;
+            color: #999;
+            font-size: 1.2rem;
+            line-height: 1.65;
+        }
+
+        .api-token-modal__error {
+            margin: -0.7rem 0 1.2rem;
+            color: #d33d4f;
+            font-size: 1.1rem;
+        }
+
+        .api-token-modal__actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+        }
+
+        .api-token-modal__actions button {
+            min-width: 7.5rem;
+            min-height: 3.5rem;
+            border-radius: 0.5rem;
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
         @include mobile-or-tablet-screen {
             margin-inline-end: 0;
         }
