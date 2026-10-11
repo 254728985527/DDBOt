@@ -134,15 +134,31 @@ window.Blockly.Blocks.trade_definition_market = {
         ) {
             populateDropdownChain();
         } else if (event.type === window.Blockly.Events.BLOCK_CHANGE && event.blockId === this.id) {
-            if (event.name === 'MARKET_LIST') {
-                submarket_dropdown.updateOptions(active_symbols.getSubmarketDropdownOptions(market), {
-                    default_value: submarket,
+            const changed_field = event.name || event.fieldName;
+            if (changed_field === 'MARKET_LIST') {
+                const next_submarket_options = active_symbols.getSubmarketDropdownOptions(market);
+                const next_submarket = next_submarket_options.some(option => option[1] === submarket)
+                    ? submarket
+                    : next_submarket_options[0]?.[1];
+                submarket_dropdown.updateOptions(next_submarket_options, {
+                    default_value: next_submarket,
                     should_pretend_empty: true,
                     event_group: event.group,
                 });
-            } else if (event.name === 'SUBMARKET_LIST') {
-                symbol_dropdown.updateOptions(active_symbols.getSymbolDropdownOptions(submarket), {
-                    default_value: symbol,
+                const next_symbol_options = active_symbols.getSymbolDropdownOptions(next_submarket);
+                symbol_dropdown.updateOptions(next_symbol_options, {
+                    default_value: next_symbol_options.some(option => option[1] === symbol)
+                        ? symbol
+                        : next_symbol_options[0]?.[1],
+                    should_pretend_empty: true,
+                    event_group: event.group,
+                });
+            } else if (changed_field === 'SUBMARKET_LIST') {
+                const next_symbol_options = active_symbols.getSymbolDropdownOptions(submarket);
+                symbol_dropdown.updateOptions(next_symbol_options, {
+                    default_value: next_symbol_options.some(option => option[1] === symbol)
+                        ? symbol
+                        : next_symbol_options[0]?.[1],
                     should_pretend_empty: true,
                     event_group: event.group,
                 });
