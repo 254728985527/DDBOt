@@ -12,6 +12,19 @@ type TickMessage = {
     tick?: { quote?: number; symbol?: string; epoch?: number };
 };
 
+type MarketStats = {
+    symbol: string;
+    quotes: number[];
+    digitCounts: number[];
+};
+
+const getLastDigit = (quote: number) => {
+    const normalized = String(quote).replace(/[^0-9]/g, '');
+    return Number(normalized.at(-1) ?? 0);
+};
+const scopeLimit = (value: string) => value.startsWith('All') ? Infinity : Number(value.match(/^([1-4])/i)?.[1] ?? 1);
+const thresholdValue = (value: string) => Number.parseFloat(value) || 0;
+
 const symbols = [
     { value: 'R_10', label: 'Volatility 10 Index' },
     { value: '1HZ10V', label: 'Volatility 10 (1s) Index' },
@@ -41,6 +54,8 @@ const symbols = [
     { value: 'RDBULL', label: 'Bull Market Index' },
 ];
 
+const volatilitySymbols = symbols.filter(item => item.value.startsWith('R_') || item.value.startsWith('1HZ'));
+
 const modes: { value: HedgeMode; label: string; icon?: string }[] = [
     { value: 'over-under', label: 'Shield Over / Under Hedging' },
     { value: 'ups-downs', label: 'Only Ups / Downs', icon: '›' },
@@ -59,6 +74,8 @@ const Hedging = () => {
     const [quote, setQuote] = useState<number | null>(null);
     const [epoch, setEpoch] = useState<number | null>(null);
     const [tickHistory, setTickHistory] = useState<number[]>([]);
+    const [marketStats, setMarketStats] = useState<Record<string, MarketStats>>({});
+    const [poolRunning, setPoolRunning] = useState(false);
     const [tradeSession, setTradeSession] = useState<{ leg: string; ticks: number[]; total: number } | null>(null);
     const [canvasZoom, setCanvasZoom] = useState(1);
 
@@ -70,34 +87,43 @@ const Hedging = () => {
         setQuote(null);
         setEpoch(null);
         setTickHistory([]);
+        setMarketStats({});
         setTradeSession(null);
         const api = api_base.api;
         if (!api) return;
         const handleMessage = (message: unknown) => {
             const tick = (message as TickMessage)?.tick;
-            if (!tick?.quote || tick.symbol !== symbol) return;
-            setQuote(tick.quote);
-            setEpoch(tick.epoch ?? null);
-            setTickHistory(previous => {
-                const next = [...previous, tick.quote as number].slice(-60);
-                setTradeSession(session => {
-                    if (!session) return session;
-                    const session_ticks = [...session.ticks, tick.quote as number].slice(-session.total);
-                    return session_ticks.length >= session.total ? { ...session, ticks: session_ticks } : { ...session, ticks: session_ticks };
-                });
-                return next;
+            if (!tick?.quote || !tick.symbol) return;
+            const quote = tick.quote as number;
+            setMarketStats(previous => {
+                const current = previous[tick.symbol!] ?? { symbol: tick.symbol!, quotes: [], digitCounts: Array(10).fill(0) };
+                const digitCounts = [...current.digitCounts];
+                digitCounts[getLastDigit(quote)] += 1;
+                return { ...previous, [tick.symbol!]: { symbol: tick.symbol!, quotes: [...current.quotes, quote].slice(-60), digitCounts } };
             });
+            if (tick.symbol !== symbol) return;
+            setQuote(quote);
+            setEpoch(tick.epoch ?? null);
+            setTickHistory(previous => [...previous, quote].slice(-60));
+            setTradeSession(session => session ? { ...session, ticks: [...session.ticks, quote].slice(-session.total) } : session);
         };
         const stream = api.onMessage?.();
         const subscription = stream?.subscribe(handleMessage);
-        api.send({ ticks: symbol, subscribe: 1 });
+        volatilitySymbols.forEach(item => api.send({ ticks: item.value, subscribe: 1 }));
         return () => {
             subscription?.unsubscribe();
-            api.send({ forget_all: 'ticks' });
+            volatilitySymbols.forEach(item => api.send({ forget_all: 'ticks' }));
         };
     }, [symbol]);
 
     const selectedSymbol = useMemo(() => symbols.find(item => item.value === symbol) ?? symbols[0], [symbol]);
+    const qualifiedMarkets = useMemo(() => volatilitySymbols.map(item => {
+        const stats = marketStats[item.value];
+        const total = stats?.digitCounts.reduce((sum, count) => sum + count, 0) ?? 0;
+        const percentage = total ? ((stats?.digitCounts[target] ?? 0) / total) * 100 : 0;
+        return { ...item, percentage, qualified: total > 0 && percentage >= thresholdValue(threshold) };
+    }).filter(item => item.qualified).sort((a, b) => b.percentage - a.percentage), [marketStats, target, threshold]);
+    const tradingMarkets = useMemo(() => qualifiedMarkets.slice(0, scopeLimit(scope)), [qualifiedMarkets, scope]);
     const formattedQuote = quote === null ? 'Waiting for price' : quote.toFixed(quote >= 100 ? 2 : 4);
     const formattedTime = epoch ? new Date(epoch * 1000).toLocaleTimeString() : 'Waiting for live tick';
     const startTrade = (leg: string, total: number) => {
@@ -154,11 +180,11 @@ const Hedging = () => {
                     </div>
 
                     <div className='hedging-section'>
-                        <div className='hedging-section__heading'><span className='hedging-radio' /> SELECT TARGET DIGIT: <small>Active: Target D{target} ({target === 4 ? '8.0%' : '10.0%'})</small></div>
+                        <div className='hedging-section__heading'><span className='hedging-radio' /> SELECT TARGET DIGIT: <small>Active: Target D{target} ({((marketStats[symbol]?.digitCounts[target] ?? 0) / Math.max(1, marketStats[symbol]?.digitCounts.reduce((sum, count) => sum + count, 0) ?? 1) * 100).toFixed(1)}%)</small></div>
                         <div className='digit-grid'>
                             {Array.from({ length: 10 }, (_, digit) => (
                                 <button className={`digit-button ${target === digit ? 'is-selected' : ''}`} type='button' key={digit} onClick={() => setTarget(digit)}>
-                                    <strong>{digit}</strong><span>{digit === 4 ? '8.0%' : digit === 6 ? '15.0%' : '11.0%'}</span>{target === digit && <em>TARGET</em>}
+                                    <strong>{digit}</strong><span>{((marketStats[symbol]?.digitCounts[digit] ?? 0) / Math.max(1, marketStats[symbol]?.digitCounts.reduce((sum, count) => sum + count, 0) ?? 1) * 100).toFixed(1)}%</span>{target === digit && <em>TARGET</em>}
                                 </button>
                             ))}
                         </div>
@@ -174,7 +200,9 @@ const Hedging = () => {
                     <div className='hedging-section'>
                         <div className='hedging-section__heading'><span className='hedging-radio' /> POOL TRADING SCOPE: <small>Sequential 1-Trade Continuous Rotation</small></div>
                         <div className='scope-grid'>{['All (≥15)% Active', '1 Market Top 1', '2 Markets Top 2', '3 Markets Top 3', '4 Markets Top 4'].map(value => <button className={scope === value ? 'is-selected' : ''} type='button' key={value} onClick={() => setScope(value)}>{value}</button>)}</div>
+                        <div className='pool-summary' aria-live='polite'><span>QUALIFIED MARKETS <b>{qualifiedMarkets.length}</b></span><span>TRADING MARKETS <b>{tradingMarkets.length}</b></span><div>{qualifiedMarkets.map(item => <span key={item.value}>{item.label.replace(' Index', '')} — {item.percentage.toFixed(1)}%</span>)}</div></div>
                     </div>
+                    <div className='pool-actions'><button type='button' className='hedging-trade-button' onClick={() => setPoolRunning(true)} disabled={poolRunning}>Run continuous pool</button><button type='button' className='hedging-trade-button is-stop' onClick={() => setPoolRunning(false)} disabled={!poolRunning}>Stop after active trade</button><span>{poolRunning ? `Running across ${tradingMarkets.length} selected markets` : 'Pool stopped'}</span></div>
 
                     <div className='hedging-live-canvas' aria-label='Live market tick chart'><LiveTickCanvas values={tickHistory} accent='#00e29b' /></div>
                     <div className='trade-grid'>
