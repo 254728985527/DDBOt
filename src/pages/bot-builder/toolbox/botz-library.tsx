@@ -13,13 +13,6 @@ type BotzStrategy = {
 
 const BOTZ_STRATEGIES: BotzStrategy[] = [
     {
-        name: 'Multi Hedging Tool',
-        description: 'Multi-market digit hedging strategy with recovery and stop-loss controls.',
-        category: 'Hedging',
-        file: 'multi-hedging-tool.xml',
-        accent: 'rose',
-    },
-    {
         name: 'SΛMUΞL Entry + Manual Com Digit',
         description: 'Entry strategy with manual digit controls.',
         category: 'Entry',
@@ -39,13 +32,6 @@ const BOTZ_STRATEGIES: BotzStrategy[] = [
         category: 'Recovery',
         file: 'digits-over-4-martingale.xml',
         accent: 'amber',
-    },
-    {
-        name: 'ENTRY BEST',
-        description: 'Entry-focused strategy configuration.',
-        category: 'Entry',
-        file: 'entry-best.xml',
-        accent: 'emerald',
     },
     {
         name: 'Over 2 Strategy PRO+',
