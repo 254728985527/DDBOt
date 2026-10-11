@@ -1,6 +1,7 @@
 import React from 'react';
 import { observer } from 'mobx-react-lite';
 import Flyout from '@/components/flyout';
+import { ApiHelpers, runIrreversibleEvents } from '@/external/bot-skeleton';
 import { useStore } from '@/hooks/useStore';
 import StopBotModal from '../dashboard/stop-bot-modal';
 import Toolbar from './toolbar';
@@ -13,7 +14,32 @@ const WorkspaceWrapper = observer(() => {
 
     React.useEffect(() => {
         onMount();
+
+        const refreshTradeParameters = async () => {
+            const activeSymbols = ApiHelpers?.instance?.active_symbols;
+            const contractsFor = ApiHelpers?.instance?.contracts_for;
+            const workspace = window.Blockly?.derivWorkspace;
+            if (!activeSymbols || !contractsFor || !workspace) return;
+
+            await activeSymbols.retrieveActiveSymbols(true);
+            contractsFor.disposeCache();
+            workspace
+                .getAllBlocks()
+                .filter(block => block.type === 'trade_definition_market')
+                .forEach(block => {
+                    runIrreversibleEvents(() => {
+                        const createEvent = new window.Blockly.Events.BlockCreate(block);
+                        window.Blockly.Events.fire(createEvent);
+                    });
+                });
+        };
+
+        const refreshTimer = window.setTimeout(() => {
+            void refreshTradeParameters();
+        }, 0);
+
         return () => {
+            window.clearTimeout(refreshTimer);
             onUnmount();
         };
     }, []);
