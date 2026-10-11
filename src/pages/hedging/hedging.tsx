@@ -35,6 +35,8 @@ const Hedging = () => {
     const [martingale, setMartingale] = useState('1.23');
     const [quote, setQuote] = useState<number | null>(null);
     const [epoch, setEpoch] = useState<number | null>(null);
+    const [tickHistory, setTickHistory] = useState<number[]>([]);
+    const [tradeSession, setTradeSession] = useState<{ leg: string; ticks: number[]; total: number } | null>(null);
 
     useEffect(() => {
         const api = api_base.api;
@@ -44,6 +46,15 @@ const Hedging = () => {
             if (!tick?.quote || tick.symbol !== symbol) return;
             setQuote(tick.quote);
             setEpoch(tick.epoch ?? null);
+            setTickHistory(previous => {
+                const next = [...previous, tick.quote as number].slice(-60);
+                setTradeSession(session => {
+                    if (!session) return session;
+                    const session_ticks = [...session.ticks, tick.quote as number].slice(-session.total);
+                    return session_ticks.length >= session.total ? { ...session, ticks: session_ticks } : { ...session, ticks: session_ticks };
+                });
+                return next;
+            });
         };
         const stream = api.onMessage?.();
         const subscription = stream?.subscribe(handleMessage);
@@ -57,6 +68,10 @@ const Hedging = () => {
     const selectedSymbol = useMemo(() => symbols.find(item => item.value === symbol) ?? symbols[0], [symbol]);
     const formattedQuote = quote === null ? '—' : quote.toFixed(2);
     const formattedTime = epoch ? new Date(epoch * 1000).toLocaleTimeString() : 'Waiting for live tick';
+    const startTrade = (leg: string, total: number) => {
+        setTradeSession({ leg, ticks: [], total });
+    };
+    const sessionTicks = tradeSession?.ticks ?? [];
 
     return (
         <main className='hedging-page'>
@@ -130,8 +145,8 @@ const Hedging = () => {
                 <section className='hedging-market-mode hedging-market-mode--light' aria-label='Only ups and downs hedging'>
                     <MarketHeader selectedSymbol={selectedSymbol} symbol={symbol} setSymbol={setSymbol} formattedQuote={formattedQuote} formattedTime={formattedTime} />
                     <div className='direction-cards'>
-                        <DirectionCard direction='up' quote={formattedQuote} stake={overStake} setStake={setOverStake} />
-                        <DirectionCard direction='down' quote={formattedQuote} stake={underStake} setStake={setUnderStake} />
+                        <DirectionCard direction='up' quote={formattedQuote} stake={overStake} setStake={setOverStake} ticks={tradeSession?.leg === 'up' ? sessionTicks : []} onBuy={() => startTrade('up', 2)} />
+                        <DirectionCard direction='down' quote={formattedQuote} stake={underStake} setStake={setUnderStake} ticks={tradeSession?.leg === 'down' ? sessionTicks : []} onBuy={() => startTrade('down', 2)} />
                     </div>
                     <div className='entry-strip'><span>ENTRY PRICE <b>{formattedQuote}</b></span><span>Market: {selectedSymbol.label} · Ticks sampled: 60</span></div>
                     <div className='probability-row'><div>↗ UP <strong>36%</strong></div><div>↘ DOWN <strong>64%</strong></div></div>
@@ -143,8 +158,8 @@ const Hedging = () => {
                     <MarketHeader selectedSymbol={selectedSymbol} symbol={symbol} setSymbol={setSymbol} formattedQuote={formattedQuote} formattedTime={formattedTime} />
                     <div className='selected-strategy'><small>SELECTED STRATEGY</small><h2>High / Low Tick</h2><span>Trade both independent hedge legs from one view.</span></div>
                     <div className='high-low-cards'>
-                        <TickCard label='High Tick' target='Peak Target: #5' stake={overStake} setStake={setOverStake} status='READY' />
-                        <TickCard label='Low Tick' target='Valley Target: #5' stake={underStake} setStake={setUnderStake} status='LOSS' />
+                        <TickCard label='High Tick' target='Peak Target: #5' stake={overStake} setStake={setOverStake} status='READY' ticks={tradeSession?.leg === 'high' ? sessionTicks : []} onRun={() => startTrade('high', 5)} />
+                        <TickCard label='Low Tick' target='Valley Target: #5' stake={underStake} setStake={setUnderStake} status='LOSS' ticks={tradeSession?.leg === 'low' ? sessionTicks : []} onRun={() => startTrade('low', 5)} />
                     </div>
                 </section>
             )}
@@ -156,11 +171,11 @@ const MarketHeader = ({ selectedSymbol, symbol, setSymbol, formattedQuote, forma
     <label className='hedging-market hedging-market--full'><span className='hedging-market__icon'>100</span><span><select value={symbol} onChange={event => setSymbol(event.target.value)} aria-label='Select volatility index'>{symbols.map(item => <option value={item.value} key={item.value}>{item.label}</option>)}</select><small>{formattedQuote} · {formattedTime}</small></span><span className='hedging-live hedging-live--green' /></label>
 );
 
-const DirectionCard = ({ direction, quote, stake, setStake }: { direction: 'up' | 'down'; quote: string; stake: string; setStake: (value: string) => void }) => (
-    <article className={`direction-card direction-card--${direction}`}><header><span>{direction === 'up' ? '↗ ONLY UPS' : '↘ ONLY DOWNS'}</span><small>Continuous Fall/Rise (Tick N-1 &gt; Tick N)</small></header><div className='mini-chart'><span>{quote}</span><i /></div><div className='direction-stats'><span>ENTRY SPOT<br /><b>{quote}</b></span><span>CONTRACT TYPE<br /><b>0 / 2 Ticks</b></span><span>PAYOUT<br /><b>$3.82 (95%)</b></span></div><label>Stake<input value={stake} onChange={event => setStake(event.target.value)} inputMode='decimal' /></label><button type='button'>{direction === 'up' ? '▶ BUY ONLY UPS' : '▶ BUY ONLY DOWNS'} <small>Payoff: $3.82 USD (+95%)</small></button></article>
+const DirectionCard = ({ direction, quote, stake, setStake, ticks, onBuy }: { direction: 'up' | 'down'; quote: string; stake: string; setStake: (value: string) => void; ticks: number[]; onBuy: () => void }) => (
+    <article className={`direction-card direction-card--${direction}`}><header><span>{direction === 'up' ? '↗ ONLY UPS' : '↘ ONLY DOWNS'}</span><small>{ticks.length ? `Live trade: ${ticks.length}/2 ticks` : 'Buy to start a 2-tick trade'}</small></header><div className='mini-chart'><span>{ticks.length ? ticks.map(value => value.toFixed(2)).join(' → ') : quote}</span><i /></div><div className='direction-stats'><span>ENTRY SPOT<br /><b>{quote}</b></span><span>CONTRACT TYPE<br /><b>0 / 2 Ticks</b></span><span>PAYOUT<br /><b>$3.82 (95%)</b></span></div><label>Stake<input value={stake} onChange={event => setStake(event.target.value)} inputMode='decimal' /></label><button type='button' onClick={onBuy} disabled={ticks.length > 0 && ticks.length < 2}>{ticks.length >= 2 ? '✓ TRADE COMPLETE' : direction === 'up' ? '▶ BUY ONLY UPS (2 TICKS)' : '▶ BUY ONLY DOWNS (2 TICKS)'} <small>{ticks.length ? `${ticks.length}/2 incoming ticks` : 'Payoff: $3.82 USD (+95%)'}</small></button></article>
 );
 
-const TickCard = ({ label, target, stake, setStake, status }: { label: string; target: string; stake: string; setStake: (value: string) => void; status: string }) => {
+const TickCard = ({ label, target, stake, setStake, status, ticks, onRun }: { label: string; target: string; stake: string; setStake: (value: string) => void; status: string; ticks: number[]; onRun: () => void }) => {
     const [enabled, setEnabled] = useState(false);
     const is_high = label === 'High Tick';
 
@@ -171,7 +186,7 @@ const TickCard = ({ label, target, stake, setStake, status }: { label: string; t
                 <em className={status === 'LOSS' ? 'is-loss' : ''}>{status}</em>
             </header>
             <div className={`tick-chart tick-chart--${is_high ? 'high' : 'low'}`}>
-                <span className='tick-chart__title'>Tick 5: {is_high ? 'Highest' : 'Lowest'} Tick</span>
+                <span className='tick-chart__title'>{ticks.length ? `Incoming ticks ${ticks.length}/5: ${ticks.map(value => value.toFixed(2)).join(' → ')}` : `Tick 5: ${is_high ? 'Highest' : 'Lowest'} Tick`}</span>
                 <span className='tick-chart__start'>Start</span><span className='tick-chart__exit'>Exit Tick</span>
                 <i /><b />
             </div>
@@ -182,7 +197,7 @@ const TickCard = ({ label, target, stake, setStake, status }: { label: string; t
             </label>
             <input className='tick-card__stake' value={`$ ${stake}`} onChange={event => setStake(event.target.value.replace(/[^0-9.]/g, ''))} inputMode='decimal' aria-label={`${label} manual stake`} />
             <div className='potential-payout'>Potential payout <b>$19.50</b></div>
-            <button className='tick-card__run' type='button' disabled={!enabled}>Run {label}</button>
+            <button className='tick-card__run' type='button' disabled={!enabled || (ticks.length > 0 && ticks.length < 5)} onClick={onRun}>{ticks.length >= 5 ? `✓ ${label} complete` : ticks.length ? `Running ${label}: ${ticks.length}/5 ticks` : `Run ${label} (5 ticks)`}</button>
             <small className='tick-card__hint'>Select the strategy to configure it independently.</small>
         </article>
     );
