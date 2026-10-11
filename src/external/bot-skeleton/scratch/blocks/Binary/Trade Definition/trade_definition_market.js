@@ -128,7 +128,10 @@ window.Blockly.Blocks.trade_definition_market = {
             });
         };
 
-        if (event.type === window.Blockly.Events.BLOCK_CREATE && event.ids.includes(this.id)) {
+        if (
+            event.type === window.Blockly.Events.BLOCK_CREATE &&
+            (event.ids?.includes(this.id) || event.blockId === this.id)
+        ) {
             populateDropdownChain();
         } else if (event.type === window.Blockly.Events.BLOCK_CHANGE && event.blockId === this.id) {
             if (event.name === 'MARKET_LIST') {

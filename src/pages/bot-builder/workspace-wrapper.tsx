@@ -28,8 +28,12 @@ const WorkspaceWrapper = observer(() => {
                 .filter(block => block.type === 'trade_definition_market')
                 .forEach(block => {
                     runIrreversibleEvents(() => {
-                        const createEvent = new window.Blockly.Events.BlockCreate(block);
-                        window.Blockly.Events.fire(createEvent);
+                        block.onchange?.({
+                            type: window.Blockly.Events.BLOCK_CREATE,
+                            ids: [block.id],
+                            blockId: block.id,
+                            group: `trade-parameters-refresh-${block.id}`,
+                        });
                     });
                 });
         };
