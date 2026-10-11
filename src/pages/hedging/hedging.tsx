@@ -334,8 +334,29 @@ const Hedging = observer(() => {
                         {mode === 'over-under' && (
                             <section className='hedging-panel' aria-label='Over and under hedging setup'>
                                 <div className='hedging-panel__top'>
-                                    <div className='hedging-panel__title'>
+                                    <div className='hedging-panel__title hedging-panel__title--digit'>
                                         <span className='hedging-radio' /> TARGET DIGIT SELECTION (0 - 9):
+                                        <label className='hedging-digit-toggle'>
+                                            <span className='hedging-digit-toggle__label'>Tick</span>
+                                            <input
+                                                type='checkbox'
+                                                checked={manualPrediction}
+                                                onChange={event => setManualPrediction(event.target.checked)}
+                                                aria-label='Enable manual tick digit'
+                                            />
+                                            <span className='hedging-digit-toggle__switch' aria-hidden='true' />
+                                            <input
+                                                className='hedging-digit-toggle__input'
+                                                type='number'
+                                                min='0'
+                                                max='9'
+                                                inputMode='numeric'
+                                                value={predictionDigit}
+                                                disabled={!manualPrediction}
+                                                onChange={event => setPredictionDigit(event.target.value.replace(/[^0-9]/g, '').slice(0, 1))}
+                                                aria-label='Manual trade digit'
+                                            />
+                                        </label>
                                     </div>
                                     <label className='hedging-market'>
                                         <span className='hedging-market__icon'>100</span>
