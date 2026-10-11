@@ -126,9 +126,42 @@ const Hedging = () => {
                 </section>
             )}
 
-            {mode !== 'over-under' && <section className='hedging-placeholder'><h2>{modes.find(item => item.value === mode)?.label}</h2><p>Select this mode to configure its hedging rules.</p></section>}
+            {mode === 'ups-downs' && (
+                <section className='hedging-market-mode hedging-market-mode--light' aria-label='Only ups and downs hedging'>
+                    <MarketHeader selectedSymbol={selectedSymbol} symbol={symbol} setSymbol={setSymbol} formattedQuote={formattedQuote} formattedTime={formattedTime} />
+                    <div className='direction-cards'>
+                        <DirectionCard direction='up' quote={formattedQuote} stake={overStake} setStake={setOverStake} />
+                        <DirectionCard direction='down' quote={formattedQuote} stake={underStake} setStake={setUnderStake} />
+                    </div>
+                    <div className='entry-strip'><span>ENTRY PRICE <b>{formattedQuote}</b></span><span>Market: {selectedSymbol.label} · Ticks sampled: 60</span></div>
+                    <div className='probability-row'><div>↗ UP <strong>36%</strong></div><div>↘ DOWN <strong>64%</strong></div></div>
+                </section>
+            )}
+
+            {mode === 'high-low' && (
+                <section className='hedging-market-mode hedging-market-mode--light' aria-label='High and low tick hedging'>
+                    <MarketHeader selectedSymbol={selectedSymbol} symbol={symbol} setSymbol={setSymbol} formattedQuote={formattedQuote} formattedTime={formattedTime} />
+                    <div className='selected-strategy'><small>SELECTED STRATEGY</small><h2>High / Low Tick</h2><span>Trade both independent hedge legs from one view.</span></div>
+                    <div className='high-low-cards'>
+                        <TickCard label='High Tick' target='Peak Target: #5' stake={overStake} setStake={setOverStake} status='READY' />
+                        <TickCard label='Low Tick' target='Valley Target: #5' stake={underStake} setStake={setUnderStake} status='LOSS' />
+                    </div>
+                </section>
+            )}
         </main>
     );
 };
+
+const MarketHeader = ({ selectedSymbol, symbol, setSymbol, formattedQuote, formattedTime }: { selectedSymbol: (typeof symbols)[number]; symbol: string; setSymbol: (value: string) => void; formattedQuote: string; formattedTime: string }) => (
+    <label className='hedging-market hedging-market--full'><span className='hedging-market__icon'>100</span><span><select value={symbol} onChange={event => setSymbol(event.target.value)} aria-label='Select volatility index'>{symbols.map(item => <option value={item.value} key={item.value}>{item.label}</option>)}</select><small>{formattedQuote} · {formattedTime}</small></span><span className='hedging-live hedging-live--green' /></label>
+);
+
+const DirectionCard = ({ direction, quote, stake, setStake }: { direction: 'up' | 'down'; quote: string; stake: string; setStake: (value: string) => void }) => (
+    <article className={`direction-card direction-card--${direction}`}><header><span>{direction === 'up' ? '↗ ONLY UPS' : '↘ ONLY DOWNS'}</span><small>Continuous Fall/Rise (Tick N-1 &gt; Tick N)</small></header><div className='mini-chart'><span>{quote}</span><i /></div><div className='direction-stats'><span>ENTRY SPOT<br /><b>{quote}</b></span><span>CONTRACT TYPE<br /><b>0 / 2 Ticks</b></span><span>PAYOUT<br /><b>$3.82 (95%)</b></span></div><label>Stake<input value={stake} onChange={event => setStake(event.target.value)} inputMode='decimal' /></label><button type='button'>{direction === 'up' ? '▶ BUY ONLY UPS' : '▶ BUY ONLY DOWNS'} <small>Payoff: $3.82 USD (+95%)</small></button></article>
+);
+
+const TickCard = ({ label, target, stake, setStake, status }: { label: string; target: string; stake: string; setStake: (value: string) => void; status: string }) => (
+    <article className='tick-card'><header><strong>{label}</strong><small>{target}</small><em className={status === 'LOSS' ? 'is-loss' : ''}>{status}</em></header><div className='tick-chart'><span>Tick 5: {label === 'High Tick' ? 'Highest' : 'Lowest'} Tick</span><i /></div><label>Manual stake<small>Set a separate stake for {label}.</small><input value={stake} onChange={event => setStake(event.target.value)} inputMode='decimal' /></label><div className='potential-payout'>Potential payout <b>$19.50</b></div><button type='button'>Run {label}</button><small>Select the strategy to configure it independently.</small></article>
+);
 
 export default Hedging;
