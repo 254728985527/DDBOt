@@ -97,16 +97,32 @@ window.Blockly.Blocks.trade_definition_market = {
             return;
         }
 
-        const populateMarketDropdown = () => {
+        const populateDropdownChain = () => {
+            const selected_market = market || market_options[0]?.[1] || 'synthetic_index';
             market_dropdown?.updateOptions(market_options, {
-                default_value: market,
+                default_value: selected_market,
+                should_pretend_empty: true,
+                event_group: event.group,
+            });
+
+            const submarket_options = active_symbols.getSubmarketDropdownOptions(selected_market);
+            const selected_submarket = submarket || submarket_options[0]?.[1] || 'random_index';
+            submarket_dropdown?.updateOptions(submarket_options, {
+                default_value: selected_submarket,
+                should_pretend_empty: true,
+                event_group: event.group,
+            });
+
+            const symbol_options = active_symbols.getSymbolDropdownOptions(selected_submarket);
+            symbol_dropdown?.updateOptions(symbol_options, {
+                default_value: symbol || symbol_options[0]?.[1] || 'R_100',
                 should_pretend_empty: true,
                 event_group: event.group,
             });
         };
 
         if (event.type === window.Blockly.Events.BLOCK_CREATE && event.ids.includes(this.id)) {
-            populateMarketDropdown();
+            populateDropdownChain();
         } else if (event.type === window.Blockly.Events.BLOCK_CHANGE && event.blockId === this.id) {
             if (event.name === 'MARKET_LIST') {
                 submarket_dropdown.updateOptions(active_symbols.getSubmarketDropdownOptions(market), {
@@ -130,7 +146,7 @@ window.Blockly.Blocks.trade_definition_market = {
             event.blockId === this.getRootBlock().id
         ) {
             if (market_dropdown.isEmpty() || submarket_dropdown.isEmpty() || symbol_dropdown.isEmpty()) {
-                populateMarketDropdown();
+                populateDropdownChain();
             }
         }
     },
