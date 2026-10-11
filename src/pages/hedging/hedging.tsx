@@ -83,9 +83,50 @@ const Hedging = () => {
     const [poolRunning, setPoolRunning] = useState(false);
     const [tradeSession, setTradeSession] = useState<{ leg: string; ticks: number[]; total: number } | null>(null);
     const [canvasZoom, setCanvasZoom] = useState(1);
+    const [canvasPan, setCanvasPan] = useState({ x: 0, y: 0 });
+    const [panMode, setPanMode] = useState(true);
+    const panRef = useRef({ active: false, pointerId: 0, startX: 0, startY: 0, originX: 0, originY: 0 });
 
-    const zoomCanvas = (delta: number) => {
-        setCanvasZoom(current => Math.min(1.35, Math.max(0.75, Number((current + delta).toFixed(2)))));
+    const zoomCanvas = (delta: number, focalPoint?: { x: number; y: number }) => {
+        setCanvasZoom(current => {
+            const next = Math.min(3, Math.max(0.25, Number((current + delta).toFixed(2))));
+            if (focalPoint && next !== current) {
+                const ratio = next / current;
+                setCanvasPan(previous => ({
+                    x: focalPoint.x - (focalPoint.x - previous.x) * ratio,
+                    y: focalPoint.y - (focalPoint.y - previous.y) * ratio,
+                }));
+            }
+            return next;
+        });
+    };
+
+    const handleCanvasPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+        if (!panMode || event.button !== 0 || (event.target as HTMLElement).closest('button, input, select, textarea, label')) return;
+        const point = event.currentTarget.getBoundingClientRect();
+        panRef.current = { active: true, pointerId: event.pointerId, startX: event.clientX - point.left, startY: event.clientY - point.top, originX: canvasPan.x, originY: canvasPan.y };
+        event.currentTarget.setPointerCapture(event.pointerId);
+    };
+
+    const handleCanvasPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+        const pan = panRef.current;
+        if (!pan.active || pan.pointerId !== event.pointerId) return;
+        const rect = event.currentTarget.getBoundingClientRect();
+        setCanvasPan({ x: pan.originX + event.clientX - rect.left - pan.startX, y: pan.originY + event.clientY - rect.top - pan.startY });
+    };
+
+    const stopCanvasPan = (event: React.PointerEvent<HTMLDivElement>) => {
+        if (panRef.current.pointerId === event.pointerId) panRef.current.active = false;
+    };
+
+    const handleCanvasWheel = (event: React.WheelEvent<HTMLDivElement>) => {
+        event.preventDefault();
+        const rect = event.currentTarget.getBoundingClientRect();
+        if (event.ctrlKey || event.metaKey) {
+            zoomCanvas(event.deltaY < 0 ? 0.1 : -0.1, { x: event.clientX - rect.left, y: event.clientY - rect.top });
+            return;
+        }
+        setCanvasPan(previous => ({ x: previous.x - (event.shiftKey ? event.deltaY : event.deltaX), y: previous.y - (event.shiftKey ? 0 : event.deltaY) }));
     };
 
     useEffect(() => {
@@ -191,11 +232,20 @@ const Hedging = () => {
                         <button type='button' onClick={() => zoomCanvas(-0.1)} aria-label='Zoom out'>−</button>
                         <output>{Math.round(canvasZoom * 100)}%</output>
                         <button type='button' onClick={() => zoomCanvas(0.1)} aria-label='Zoom in'>+</button>
-                        <button type='button' onClick={() => setCanvasZoom(1)} aria-label='Reset zoom'>Reset</button>
+                        <button type='button' onClick={() => { setCanvasZoom(1); setCanvasPan({ x: 0, y: 0 }); }} aria-label='Reset view'>Reset view</button>
+                        <button type='button' onClick={() => { setCanvasZoom(0.75); setCanvasPan({ x: 0, y: 0 }); }} aria-label='Fit canvas'>Fit canvas</button>
+                        <button className={panMode ? 'is-active' : ''} type='button' onClick={() => setPanMode(current => !current)} aria-pressed={panMode} aria-label='Toggle pan mode'>Pan</button>
                     </div>
                 </div>
-                <div className='hedging-canvas__viewport'>
-                    <div className='hedging-canvas__stage' style={{ transform: `scale(${canvasZoom})` }}>
+                <div
+                    className={`hedging-canvas__viewport ${panMode ? 'is-pan-enabled' : ''}`}
+                    onPointerDown={handleCanvasPointerDown}
+                    onPointerMove={handleCanvasPointerMove}
+                    onPointerUp={stopCanvasPan}
+                    onPointerCancel={stopCanvasPan}
+                    onWheel={handleCanvasWheel}
+                >
+                    <div className='hedging-canvas__stage' style={{ transform: `translate(${canvasPan.x}px, ${canvasPan.y}px) scale(${canvasZoom})` }}>
             {mode === 'over-under' && (
                 <section className='hedging-panel' aria-label='Over and under hedging setup'>
                     <div className='hedging-panel__top'>
