@@ -116,6 +116,7 @@ const FreeBots = observer(() => {
     const store = useStore();
     const dashboard = store?.dashboard;
     const [loadingBotId, setLoadingBotId] = useState<string | null>(null);
+    const [loadError, setLoadError] = useState<string | null>(null);
     const [selectedCategory, setSelectedCategory] = useState<string>('All');
 
     const categories = ['All', ...Array.from(new Set(BOTS.map(bot => bot.category)))];
@@ -125,28 +126,40 @@ const FreeBots = observer(() => {
     const loadBot = async (bot: Bot) => {
         try {
             setLoadingBotId(bot.id);
+            setLoadError(null);
+            dashboard?.setActiveTab(1);
+            window.location.hash = 'bot_builder';
 
-            const response = await fetch(`/bots/${bot.fileName}`);
+            const response = await fetch(`/bots/${encodeURIComponent(bot.fileName)}`);
             if (!response.ok) {
                 throw new Error('Failed to fetch bot file');
             }
 
             const xmlContent = await response.text();
+            const workspace = await new Promise<any>((resolve, reject) => {
+                const startedAt = Date.now();
+                const waitForWorkspace = () => {
+                    const activeWorkspace = (window as any).Blockly?.derivWorkspace;
+                    if (activeWorkspace) return resolve(activeWorkspace);
+                    if (Date.now() - startedAt >= 8000) return reject(new Error('Bot Builder is still loading. Please try again.'));
+                    window.setTimeout(waitForWorkspace, 100);
+                };
+                waitForWorkspace();
+            });
 
             await load({
                 block_string: xmlContent,
                 file_name: bot.name,
-                workspace: (window as any).Blockly?.derivWorkspace,
+                workspace,
                 from: save_types.LOCAL,
                 drop_event: null,
                 strategy_id: null,
                 showIncompatibleStrategyDialog: null,
             });
 
-            dashboard?.setActiveTab(1);
-            window.location.hash = 'bot_builder';
         } catch (error) {
             console.error('Error loading bot:', error);
+            setLoadError(error instanceof Error ? error.message : 'Unable to open this bot in Bot Builder.');
         } finally {
             setLoadingBotId(null);
         }
@@ -162,6 +175,8 @@ const FreeBots = observer(() => {
                 </div>
                 <span className='free-bots__count'>{filteredBots.length} bots</span>
             </div>
+
+            {loadError && <div className='free-bots__error' role='alert'>{loadError}</div>}
 
             <div className='free-bots__categories'>
                 {categories.map(category => (

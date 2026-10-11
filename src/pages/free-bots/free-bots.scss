@@ -45,8 +45,19 @@
         font-size: .85rem;
     }
 
-    &__categories {
-        display: flex;
+  &__error {
+    margin: 16px 0;
+    padding: 12px 16px;
+    border: 1px solid #ff6b7d;
+    border-radius: 10px;
+    background: #fff1f3;
+    color: #9c1d35;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  &__categories {
+  display: flex;
         flex-wrap: wrap;
         gap: 8px;
         justify-content: center;
