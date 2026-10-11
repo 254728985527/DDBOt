@@ -30,7 +30,10 @@ const Money = ({
     return (
         <React.Fragment>
             <span>{has_sign && sign}</span>
-            <span data-testid='dt_span' className={className}>
+            <span
+                data-testid='dt_span'
+                className={`${className ?? ''}${Number(amount) < 0 ? ' money--negative' : ''}`.trim()}
+            >
                 {final_amount} {show_currency && getCurrencyDisplayCode(currency)}
             </span>
         </React.Fragment>
