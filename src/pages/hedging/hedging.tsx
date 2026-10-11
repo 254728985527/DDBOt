@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { api_base } from '@/external/bot-skeleton';
 import {
     LabelPairedChevronDownSmBoldIcon,
     LabelPairedPuzzlePieceTwoCaptionBoldIcon,
@@ -90,9 +89,8 @@ const Hedging = () => {
         setTickHistory([]);
         setMarketStats({});
         setTradeSession(null);
-        const api = api_base.api;
-        setTickSubscriptionActive(Boolean(api));
-        if (!api) return;
+        const publicSocket = new WebSocket('wss://api.derivws.com/trading/v3/options/ws/public');
+        setTickSubscriptionActive(false);
         const handleMessage = (message: unknown) => {
             const tick = (message as TickMessage)?.tick;
             if (!tick?.quote || !tick.symbol) return;
@@ -109,12 +107,21 @@ const Hedging = () => {
             setTickHistory(previous => [...previous, quote].slice(-60));
             setTradeSession(session => session ? { ...session, ticks: [...session.ticks, quote].slice(-session.total) } : session);
         };
-        const stream = api.onMessage?.();
-        const subscription = stream?.subscribe(handleMessage);
-        volatilitySymbols.forEach(item => api.send({ ticks: item.value, subscribe: 1 }));
+        publicSocket.addEventListener('open', () => {
+            setTickSubscriptionActive(true);
+            volatilitySymbols.forEach(item => publicSocket.send(JSON.stringify({ ticks: item.value, subscribe: 1 })));
+        });
+        publicSocket.addEventListener('message', event => {
+            try {
+                handleMessage(JSON.parse(event.data as string));
+            } catch {
+                // Ignore non-JSON WebSocket frames from the public gateway.
+            }
+        });
+        publicSocket.addEventListener('close', () => setTickSubscriptionActive(false));
+        publicSocket.addEventListener('error', () => setTickSubscriptionActive(false));
         return () => {
-            subscription?.unsubscribe();
-            volatilitySymbols.forEach(item => api.send({ forget_all: 'ticks' }));
+            if (publicSocket.readyState === WebSocket.OPEN) publicSocket.close(1000, 'Hedging view closed');
             setTickSubscriptionActive(false);
         };
     }, [symbol]);
