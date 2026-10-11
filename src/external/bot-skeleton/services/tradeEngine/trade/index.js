@@ -39,9 +39,11 @@ const watchDuring = store =>
 let prevTick;
 
 const selectPoolMarket = (configuredSymbol, tradeOptions) => {
-    if (!tradeOptions?.poolEnabled || typeof window === 'undefined') return configuredSymbol;
+    const poolEnabled = tradeOptions?.poolEnabled === true || tradeOptions?.poolEnabled === 'TRUE';
+    if (!poolEnabled) return configuredSymbol;
 
-    const marketPercentages = window.marketPercentages;
+    const runtime = typeof window !== 'undefined' ? window : {};
+    const marketPercentages = runtime.marketPercentages;
     if (!marketPercentages || typeof marketPercentages !== 'object') return configuredSymbol;
 
     const configuredThreshold = Number(tradeOptions.qualifyingThreshold ?? 10);
@@ -50,7 +52,11 @@ const selectPoolMarket = (configuredSymbol, tradeOptions) => {
     const candidates = Object.entries(marketPercentages)
         .map(([symbol, value]) => {
             const metrics = typeof value === 'number' ? { botVariable: value } : (value ?? {});
-            const percentages = [metrics.lastDigit, metrics.directional, metrics.botVariable].map(Number);
+            const percentages = [
+                metrics.lastDigit ?? metrics.last_digit ?? metrics.lastDigitPercentage,
+                metrics.directional ?? metrics.direction ?? metrics.directionalPercentage,
+                metrics.botVariable ?? metrics.bot_variable ?? metrics.percentage,
+            ].map(Number);
             const allMetricsAvailable = percentages.every(Number.isFinite);
             const qualifies = allMetricsAvailable && percentages.every(percentage => percentage >= threshold);
             return {
@@ -62,8 +68,14 @@ const selectPoolMarket = (configuredSymbol, tradeOptions) => {
         .filter(candidate => candidate.qualifies)
         .sort((left, right) => right.score - left.score);
 
-    const scopedCandidates = scope === 'all_gt_15' ? candidates : candidates.slice(0, Math.max(1, Number(scope) || 1));
-    return scopedCandidates[0]?.symbol ?? configuredSymbol;
+    const scopeSize = scope === 'all_gt_15' ? candidates.length : Math.max(1, Number(scope) || 1);
+    const scopedCandidates = candidates.slice(0, scopeSize);
+    return (
+        scopedCandidates.reduce(
+            (highest, candidate) => (!highest || candidate.score > highest.score ? candidate : highest),
+            null
+        )?.symbol ?? configuredSymbol
+    );
 };
 
 const watchScope = ({ store, stopScope, passScope, passFlag }) => {
