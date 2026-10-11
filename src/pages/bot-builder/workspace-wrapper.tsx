@@ -34,12 +34,23 @@ const WorkspaceWrapper = observer(() => {
                 });
         };
 
-        const refreshTimer = window.setTimeout(() => {
-            void refreshTradeParameters();
-        }, 0);
+        let refreshTimer: number | undefined;
+        let attempts = 0;
+        const retryRefresh = () => {
+            attempts += 1;
+            void refreshTradeParameters()
+                .catch(() => undefined)
+                .finally(() => {
+                    if (attempts < 40) {
+                        refreshTimer = window.setTimeout(retryRefresh, 250);
+                    }
+                });
+        };
+
+        retryRefresh();
 
         return () => {
-            window.clearTimeout(refreshTimer);
+            if (refreshTimer) window.clearTimeout(refreshTimer);
             onUnmount();
         };
     }, []);
