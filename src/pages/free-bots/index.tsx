@@ -112,6 +112,47 @@ const BOTS: Bot[] = [
     },
 ];
 
+const normalizeDerivBotXml = (source: string) => {
+    const document = new DOMParser().parseFromString(source, 'application/xml');
+    if (document.querySelector('parsererror')) throw new Error('This bot XML is malformed and cannot be repaired.');
+
+    const fieldsByBlock: Record<string, Record<string, string>> = {
+        trade_definition_market: {
+            MARKET_LIST: 'synthetic_index',
+            SUBMARKET_LIST: 'random_index',
+            SYMBOL_LIST: 'R_100',
+        },
+        trade_definition_tradetype: { TRADETYPECAT_LIST: 'digits', TRADETYPE_LIST: 'overunder' },
+        trade_definition_contracttype: { TYPE_LIST: 'both' },
+        trade_definition_candleinterval: { CANDLEINTERVAL_LIST: '60' },
+        trade_definition_tradeoptions: { DURATIONTYPE_LIST: 't' },
+    };
+
+    Object.entries(fieldsByBlock).forEach(([blockType, defaults]) => {
+        document.querySelectorAll(`block[type="${blockType}"]`).forEach(block => {
+            Object.entries(defaults).forEach(([fieldName, fallback]) => {
+                let field = block.querySelector(`:scope > field[name="${fieldName}"]`);
+                const legacyName = fieldName.replace('_LIST', '');
+                if (!field) field = block.querySelector(`:scope > field[name="${legacyName}"]`);
+                if (!field) {
+                    field = document.createElement('field');
+                    field.setAttribute('name', fieldName);
+                    block.insertBefore(field, block.firstElementChild);
+                }
+                field.setAttribute('name', fieldName);
+                if (!field.textContent?.trim() || field.textContent.trim() === 'NOT_AVAILABLE')
+                    field.textContent = fallback;
+            });
+        });
+    });
+
+    document
+        .querySelectorAll('field[name="DURATIONTYPE"]')
+        .forEach(field => field.setAttribute('name', 'DURATIONTYPE_LIST'));
+    document.querySelectorAll('field[name="PURCHASE"]').forEach(field => field.setAttribute('name', 'PURCHASE_LIST'));
+    return new XMLSerializer().serializeToString(document);
+};
+
 const FreeBots = observer(() => {
     const store = useStore();
     const dashboard = store?.dashboard;
@@ -135,13 +176,14 @@ const FreeBots = observer(() => {
                 throw new Error('Failed to fetch bot file');
             }
 
-            const xmlContent = await response.text();
+            const xmlContent = normalizeDerivBotXml(await response.text());
             const workspace = await new Promise<any>((resolve, reject) => {
                 const startedAt = Date.now();
                 const waitForWorkspace = () => {
                     const activeWorkspace = (window as any).Blockly?.derivWorkspace;
                     if (activeWorkspace) return resolve(activeWorkspace);
-                    if (Date.now() - startedAt >= 8000) return reject(new Error('Bot Builder is still loading. Please try again.'));
+                    if (Date.now() - startedAt >= 8000)
+                        return reject(new Error('Bot Builder is still loading. Please try again.'));
                     window.setTimeout(waitForWorkspace, 100);
                 };
                 waitForWorkspace();
@@ -156,7 +198,6 @@ const FreeBots = observer(() => {
                 strategy_id: null,
                 showIncompatibleStrategyDialog: null,
             });
-
         } catch (error) {
             console.error('Error loading bot:', error);
             setLoadError(error instanceof Error ? error.message : 'Unable to open this bot in Bot Builder.');
@@ -176,7 +217,11 @@ const FreeBots = observer(() => {
                 <span className='free-bots__count'>{filteredBots.length} bots</span>
             </div>
 
-            {loadError && <div className='free-bots__error' role='alert'>{loadError}</div>}
+            {loadError && (
+                <div className='free-bots__error' role='alert'>
+                    {loadError}
+                </div>
+            )}
 
             <div className='free-bots__categories'>
                 {categories.map(category => (
@@ -194,7 +239,9 @@ const FreeBots = observer(() => {
                 {filteredBots.map(bot => (
                     <div key={bot.id} className='free-bots__card'>
                         <div className='free-bots__card-header'>
-                            <span className='free-bots__card-icon' aria-hidden='true'>{bot.name.charAt(0)}</span>
+                            <span className='free-bots__card-icon' aria-hidden='true'>
+                                {bot.name.charAt(0)}
+                            </span>
                             <span className='free-bots__card-category'>{bot.category}</span>
                         </div>
                         <h3 className='free-bots__card-title'>{bot.name}</h3>
