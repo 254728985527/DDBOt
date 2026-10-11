@@ -240,10 +240,12 @@ const TickCard = ({ label, target, stake, setStake, status, ticks, onRun }: { la
                 <em className='is-ready'>READY</em>
             </header>
             <div className={`tick-chart tick-chart--${is_high ? 'high' : 'low'}`}>
-                <LiveTickCanvas values={ticks} accent={is_high ? '#347edb' : '#ff4860'} />
-                <span className='tick-chart__title'>{ticks.length ? `Incoming ticks ${ticks.length}/5: ${ticks.map(value => value.toFixed(2)).join(' → ')}` : ''}</span>
+                <svg className='tick-chart__svg' viewBox='0 0 620 190' role='img' aria-label={`${label} five tick path`} preserveAspectRatio='none'>
+                    <line className='tick-chart__target-line' x1='0' y1={is_high ? '92' : '112'} x2='620' y2={is_high ? '92' : '112'} />
+                    <polyline className='tick-chart__path' points={is_high ? '35,145 175,88 275,135 400,58 535,150' : '35,62 175,115 275,70 400,132 535,42'} />
+                    { (is_high ? [[35,145],[175,88],[275,135],[400,58],[535,150]] : [[35,62],[175,115],[275,70],[400,132],[535,42]]).map(([cx, cy], index) => <circle key={index} className={`tick-chart__point ${index === 3 ? 'is-target' : ''}`} cx={cx} cy={cy} r={index === 3 ? 11 : 6} />) }
+                </svg>
                 <span className='tick-chart__start'>Start</span><span className='tick-chart__exit'>Exit Tick</span><strong className='tick-chart__target'>{is_high ? 'Tick 5: Highest Tick' : 'Tick 5: Lowest Tick'}</strong>
-                <i /><b />
             </div>
             <label className='tick-card__toggle'>
                 <span>Manual stake<small>Set a separate stake for {label}.</small></span>
