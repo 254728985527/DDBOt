@@ -31,6 +31,7 @@ type TError = null | {
 const subscriptions: TSubscription = {};
 const publicTickSockets: Record<string, WebSocket> = {};
 const PUBLIC_MARKET_DATA_URL = 'wss://api.derivws.com/trading/v1/options/ws/public';
+const DEFAULT_CHART_SYMBOL = '1HZ100V';
 
 const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) => {
     const barriers: [] = [];
@@ -115,7 +116,7 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
     useEffect(() => {
         if (!isChartApiReady) return;
         if (!chart_store.symbol) {
-            chart_store.symbol = '1HZ100V';
+            chart_store.symbol = DEFAULT_CHART_SYMBOL;
         }
         if (chart_store.symbol) updateSymbol();
     }, [chart_store, isChartApiReady, updateSymbol]);
@@ -149,6 +150,9 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
                 publicTickSockets[subscriptionId] = publicSocket;
                 publicSocket.addEventListener('open', () => {
                     publicSocket.send(JSON.stringify({ ticks: req.ticks_history, subscribe: 1 }));
+                });
+                publicSocket.addEventListener('close', () => {
+                    if (publicTickSockets[subscriptionId] === publicSocket) delete publicTickSockets[subscriptionId];
                 });
                 publicSocket.addEventListener('message', event => {
                     try {
