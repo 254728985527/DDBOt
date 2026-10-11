@@ -134,6 +134,13 @@ const Hedging = () => {
         return { ...item, percentage, qualified: total > 0 && percentage >= thresholdValue(threshold) };
     }).filter(item => item.qualified).sort((a, b) => b.percentage - a.percentage), [marketStats, target, threshold]);
     const tradingMarkets = useMemo(() => qualifiedMarkets.slice(0, scopeLimit(scope)), [qualifiedMarkets, scope]);
+    const momentum = useMemo(() => {
+        const changes = tickHistory.slice(1).map((value, index) => value - tickHistory[index]).filter(change => change !== 0);
+        const up = changes.filter(change => change > 0).length;
+        const down = changes.filter(change => change < 0).length;
+        const total = up + down;
+        return { up: total ? Math.round((up / total) * 100) : 50, down: total ? Math.round((down / total) * 100) : 50 };
+    }, [tickHistory]);
     const formattedQuote = quote === null ? 'Waiting for price' : quote.toFixed(quote >= 100 ? 2 : 4);
     const formattedTime = epoch ? new Date(epoch * 1000).toLocaleTimeString() : 'Waiting for live tick';
     const startTrade = (leg: string, total: number) => {
@@ -228,11 +235,11 @@ const Hedging = () => {
                 <section className='hedging-market-mode hedging-market-mode--light' aria-label='Only ups and downs hedging'>
                     <MarketHeader selectedSymbol={selectedSymbol} symbol={symbol} setSymbol={setSymbol} formattedQuote={formattedQuote} formattedTime={formattedTime} tickSubscriptionActive={tickSubscriptionActive} />
                     <div className='direction-cards'>
-                        <DirectionCard direction='up' quote={formattedQuote} stake={overStake} setStake={setOverStake} ticks={tradeSession?.leg === 'up' ? sessionTicks : []} onBuy={() => startTrade('up', 2)} />
-                        <DirectionCard direction='down' quote={formattedQuote} stake={underStake} setStake={setUnderStake} ticks={tradeSession?.leg === 'down' ? sessionTicks : []} onBuy={() => startTrade('down', 2)} />
+                        <DirectionCard direction='up' quote={formattedQuote} stake={overStake} setStake={setOverStake} ticks={tradeSession?.leg === 'up' ? sessionTicks : []} onBuy={() => startTrade('up', 2)} momentum={momentum.up} />
+                        <DirectionCard direction='down' quote={formattedQuote} stake={underStake} setStake={setUnderStake} ticks={tradeSession?.leg === 'down' ? sessionTicks : []} onBuy={() => startTrade('down', 2)} momentum={momentum.down} />
                     </div>
+                    <div className='momentum-strip' aria-label={`Live momentum: Up ${momentum.up} percent, Down ${momentum.down} percent`}><div className='momentum-strip__up'><span>↗ UP</span><strong>{momentum.up}%</strong></div><div className='momentum-strip__down'><span>↘ DOWN</span><strong>{momentum.down}%</strong></div></div>
                     <div className='entry-strip'><span>ENTRY PRICE <b>{formattedQuote}</b></span><span>Market: {selectedSymbol.label} · Ticks sampled: 60</span></div>
-                    <div className='probability-row'><div>↗ UP <strong>36%</strong></div><div>↘ DOWN <strong>64%</strong></div></div>
                 </section>
             )}
 
@@ -283,14 +290,14 @@ const LiveTickCanvas = ({ values, accent }: { values: number[]; accent: string }
     return <canvas ref={canvasRef} className='live-tick-canvas' aria-hidden='true' />;
 };
 
-const DirectionCard = ({ direction, quote, stake, setStake, ticks, onBuy }: { direction: 'up' | 'down'; quote: string; stake: string; setStake: (value: string) => void; ticks: number[]; onBuy: () => void }) => (
+const DirectionCard = ({ direction, quote, stake, setStake, ticks, onBuy, momentum }: { direction: 'up' | 'down'; quote: string; stake: string; setStake: (value: string) => void; ticks: number[]; onBuy: () => void; momentum: number }) => (
     <article className={`direction-card direction-card--${direction}`}>
         <header>
             <div className='direction-card__identity'><span className='direction-card__icon' aria-hidden='true'>{direction === 'up' ? '↗' : '↘'}</span><div><strong>{direction === 'up' ? 'ONLY UPS' : 'ONLY DOWNS'}</strong><small>{direction === 'up' ? 'Continuous Rise Tick N+1 Tick N' : 'Continuous Fall Tick N+1 Tick N'}</small></div></div>
             <div className='direction-card__badges'><button type='button' onClick={onBuy}>{direction === 'up' ? 'RUN HIGH' : 'RUN LOW'}</button><b>Weekly</b><em>Active</em></div>
         </header>
         <div className='mini-chart'>
-            <strong>✓ {direction === 'up' ? 'Continuous Rise' : 'Continuous Fall'} (0/2 Ticks)</strong>
+            <strong>✓ {direction === 'up' ? 'Continuous Rise' : 'Continuous Fall'} (0/2 Ticks)</strong><span className='direction-card__momentum'>{direction === 'up' ? 'UP' : 'DOWN'} MOMENTUM <b>{momentum}%</b></span>
             <svg viewBox='0 0 620 190' preserveAspectRatio='none' aria-label={`${direction} direction chart`} role='img'><polyline points={direction === 'up' ? '45,150 310,95 565,40' : '45,40 310,95 565,150'} /><circle cx='45' cy={direction === 'up' ? '150' : '40'} r='7' /><circle className='is-middle' cx='310' cy='95' r='7' /><circle cx='565' cy={direction === 'up' ? '40' : '150'} r='7' /></svg>
             <span className='mini-chart__start'>Start</span><span className='mini-chart__end'>End</span>
         </div>
