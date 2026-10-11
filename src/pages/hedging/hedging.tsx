@@ -13,9 +13,32 @@ type TickMessage = {
 };
 
 const symbols = [
-    { value: '1HZ100V', label: 'Volatility 100 (1s) Index' },
+    { value: 'R_10', label: 'Volatility 10 Index' },
+    { value: '1HZ10V', label: 'Volatility 10 (1s) Index' },
+    { value: 'R_25', label: 'Volatility 25 Index' },
+    { value: '1HZ25V', label: 'Volatility 25 (1s) Index' },
+    { value: 'R_30', label: 'Volatility 30 Index' },
+    { value: '1HZ30V', label: 'Volatility 30 (1s) Index' },
+    { value: 'R_50', label: 'Volatility 50 Index' },
     { value: '1HZ50V', label: 'Volatility 50 (1s) Index' },
+    { value: 'R_75', label: 'Volatility 75 Index' },
+    { value: '1HZ75V', label: 'Volatility 75 (1s) Index' },
+    { value: 'R_90', label: 'Volatility 90 Index' },
+    { value: '1HZ90V', label: 'Volatility 90 (1s) Index' },
     { value: 'R_100', label: 'Volatility 100 Index' },
+    { value: '1HZ100V', label: 'Volatility 100 (1s) Index' },
+    { value: '1HZ150V', label: 'Volatility 150 (1s) Index' },
+    { value: '1HZ250V', label: 'Volatility 250 (1s) Index' },
+    { value: '1HZ200V', label: 'Volatility 200 (1s) Index' },
+    { value: '1HZ300V', label: 'Volatility 300 (1s) Index' },
+    { value: 'BOOM300N', label: 'Boom 300 Index' },
+    { value: 'BOOM500', label: 'Boom 500 Index' },
+    { value: 'BOOM1000', label: 'Boom 1000 Index' },
+    { value: 'CRASH300N', label: 'Crash 300 Index' },
+    { value: 'CRASH500', label: 'Crash 500 Index' },
+    { value: 'CRASH1000', label: 'Crash 1000 Index' },
+    { value: 'RDBEAR', label: 'Bear Market Index' },
+    { value: 'RDBULL', label: 'Bull Market Index' },
 ];
 
 const modes: { value: HedgeMode; label: string; icon?: string }[] = [
@@ -39,6 +62,10 @@ const Hedging = () => {
     const [tradeSession, setTradeSession] = useState<{ leg: string; ticks: number[]; total: number } | null>(null);
 
     useEffect(() => {
+        setQuote(null);
+        setEpoch(null);
+        setTickHistory([]);
+        setTradeSession(null);
         const api = api_base.api;
         if (!api) return;
         const handleMessage = (message: unknown) => {
@@ -66,7 +93,7 @@ const Hedging = () => {
     }, [symbol]);
 
     const selectedSymbol = useMemo(() => symbols.find(item => item.value === symbol) ?? symbols[0], [symbol]);
-    const formattedQuote = quote === null ? '—' : quote.toFixed(2);
+    const formattedQuote = quote === null ? 'Waiting for price' : quote.toFixed(quote >= 100 ? 2 : 4);
     const formattedTime = epoch ? new Date(epoch * 1000).toLocaleTimeString() : 'Waiting for live tick';
     const startTrade = (leg: string, total: number) => {
         setTradeSession({ leg, ticks: [], total });
