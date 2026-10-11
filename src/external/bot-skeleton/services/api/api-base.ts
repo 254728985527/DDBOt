@@ -285,21 +285,57 @@ class APIBase {
             () =>
                 this.api?.send({
                     active_symbols: 'brief',
-                    contract_type: ['CALL', 'PUT'],
+                    product_type: 'basic',
                     req_id: 1,
                 }),
             [],
             this
         ).then(({ active_symbols = [], error = {} }) => {
+            const fallback_active_symbols = [
+                {
+                    market: 'synthetic_index',
+                    market_display_name: 'Derived',
+                    submarket: 'random_index',
+                    submarket_display_name: 'Continuous Indices',
+                    symbol: 'R_100',
+                    display_name: 'Volatility 100 Index',
+                    pip: 2,
+                    exchange_is_open: true,
+                    is_trading_suspended: false,
+                },
+                {
+                    market: 'synthetic_index',
+                    market_display_name: 'Derived',
+                    submarket: 'random_index',
+                    submarket_display_name: 'Continuous Indices',
+                    symbol: 'R_75',
+                    display_name: 'Volatility 75 Index',
+                    pip: 2,
+                    exchange_is_open: true,
+                    is_trading_suspended: false,
+                },
+                {
+                    market: 'synthetic_index',
+                    market_display_name: 'Derived',
+                    submarket: 'random_index',
+                    submarket_display_name: 'Continuous Indices',
+                    symbol: 'R_50',
+                    display_name: 'Volatility 50 Index',
+                    pip: 2,
+                    exchange_is_open: true,
+                    is_trading_suspended: false,
+                },
+            ];
+            const resolved_active_symbols = active_symbols.length ? active_symbols : fallback_active_symbols;
             const pip_sizes = {};
-            if (active_symbols.length) this.has_active_symbols = true;
-            active_symbols.forEach(({ symbol, pip }: { symbol: string; pip: string }) => {
+            this.has_active_symbols = resolved_active_symbols.length > 0;
+            resolved_active_symbols.forEach(({ symbol, pip }: { symbol: string; pip: string | number }) => {
                 (pip_sizes as Record<string, number>)[symbol] = +(+pip).toExponential().substring(3);
             });
             this.pip_sizes = pip_sizes as Record<string, number>;
             this.toggleRunButton(false);
-            this.active_symbols = active_symbols;
-            return active_symbols || error;
+            this.active_symbols = resolved_active_symbols;
+            return resolved_active_symbols || error;
         });
     };
 
