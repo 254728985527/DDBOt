@@ -160,8 +160,32 @@ const DirectionCard = ({ direction, quote, stake, setStake }: { direction: 'up' 
     <article className={`direction-card direction-card--${direction}`}><header><span>{direction === 'up' ? '↗ ONLY UPS' : '↘ ONLY DOWNS'}</span><small>Continuous Fall/Rise (Tick N-1 &gt; Tick N)</small></header><div className='mini-chart'><span>{quote}</span><i /></div><div className='direction-stats'><span>ENTRY SPOT<br /><b>{quote}</b></span><span>CONTRACT TYPE<br /><b>0 / 2 Ticks</b></span><span>PAYOUT<br /><b>$3.82 (95%)</b></span></div><label>Stake<input value={stake} onChange={event => setStake(event.target.value)} inputMode='decimal' /></label><button type='button'>{direction === 'up' ? '▶ BUY ONLY UPS' : '▶ BUY ONLY DOWNS'} <small>Payoff: $3.82 USD (+95%)</small></button></article>
 );
 
-const TickCard = ({ label, target, stake, setStake, status }: { label: string; target: string; stake: string; setStake: (value: string) => void; status: string }) => (
-    <article className='tick-card'><header><strong>{label}</strong><small>{target}</small><em className={status === 'LOSS' ? 'is-loss' : ''}>{status}</em></header><div className='tick-chart'><span>Tick 5: {label === 'High Tick' ? 'Highest' : 'Lowest'} Tick</span><i /></div><label>Manual stake<small>Set a separate stake for {label}.</small><input value={stake} onChange={event => setStake(event.target.value)} inputMode='decimal' /></label><div className='potential-payout'>Potential payout <b>$19.50</b></div><button type='button'>Run {label}</button><small>Select the strategy to configure it independently.</small></article>
-);
+const TickCard = ({ label, target, stake, setStake, status }: { label: string; target: string; stake: string; setStake: (value: string) => void; status: string }) => {
+    const [enabled, setEnabled] = useState(false);
+    const is_high = label === 'High Tick';
+
+    return (
+        <article className='tick-card'>
+            <header className='tick-card__header'>
+                <div><strong>{label}</strong><small>({target})</small></div>
+                <em className={status === 'LOSS' ? 'is-loss' : ''}>{status}</em>
+            </header>
+            <div className={`tick-chart tick-chart--${is_high ? 'high' : 'low'}`}>
+                <span className='tick-chart__title'>Tick 5: {is_high ? 'Highest' : 'Lowest'} Tick</span>
+                <span className='tick-chart__start'>Start</span><span className='tick-chart__exit'>Exit Tick</span>
+                <i /><b />
+            </div>
+            <label className='tick-card__toggle'>
+                <span>Manual stake<small>Set a separate stake for {label}.</small></span>
+                <input type='checkbox' checked={enabled} onChange={event => setEnabled(event.target.checked)} />
+                <i aria-hidden='true' />
+            </label>
+            <input className='tick-card__stake' value={`$ ${stake}`} onChange={event => setStake(event.target.value.replace(/[^0-9.]/g, ''))} inputMode='decimal' aria-label={`${label} manual stake`} />
+            <div className='potential-payout'>Potential payout <b>$19.50</b></div>
+            <button className='tick-card__run' type='button' disabled={!enabled}>Run {label}</button>
+            <small className='tick-card__hint'>Select the strategy to configure it independently.</small>
+        </article>
+    );
+};
 
 export default Hedging;
