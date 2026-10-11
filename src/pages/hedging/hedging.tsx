@@ -226,7 +226,20 @@ const LiveTickCanvas = ({ values, accent }: { values: number[]; accent: string }
 };
 
 const DirectionCard = ({ direction, quote, stake, setStake, ticks, onBuy }: { direction: 'up' | 'down'; quote: string; stake: string; setStake: (value: string) => void; ticks: number[]; onBuy: () => void }) => (
-    <article className={`direction-card direction-card--${direction}`}><header><span>{direction === 'up' ? '↗ ONLY UPS' : '↘ ONLY DOWNS'}</span><small>{ticks.length ? `Live trade: ${ticks.length}/2 ticks` : 'Buy to start a 2-tick trade'}</small></header><div className='mini-chart'><LiveTickCanvas values={ticks} accent={direction === 'up' ? '#08ad75' : '#2479ef'} /><span>{ticks.length ? ticks.map(value => value.toFixed(2)).join(' → ') : quote}</span><i /></div><div className='direction-stats'><span>ENTRY SPOT<br /><b>{quote}</b></span><span>CONTRACT TYPE<br /><b>0 / 2 Ticks</b></span><span>PAYOUT<br /><b>$3.82 (95%)</b></span></div><label>Stake<input value={stake} onChange={event => setStake(event.target.value)} inputMode='decimal' /></label><button type='button' onClick={onBuy} disabled={ticks.length > 0 && ticks.length < 2}>{ticks.length >= 2 ? '✓ TRADE COMPLETE' : direction === 'up' ? '▶ BUY ONLY UPS (2 TICKS)' : '▶ BUY ONLY DOWNS (2 TICKS)'} <small>{ticks.length ? `${ticks.length}/2 incoming ticks` : 'Payoff: $3.82 USD (+95%)'}</small></button></article>
+    <article className={`direction-card direction-card--${direction}`}>
+        <header>
+            <div className='direction-card__identity'><span className='direction-card__icon' aria-hidden='true'>{direction === 'up' ? '↗' : '↘'}</span><div><strong>{direction === 'up' ? 'ONLY UPS' : 'ONLY DOWNS'}</strong><small>{direction === 'up' ? 'Continuous Rise Tick N+1 Tick N' : 'Continuous Fall Tick N+1 Tick N'}</small></div></div>
+            <div className='direction-card__badges'><button type='button' onClick={onBuy}>{direction === 'up' ? 'RUN HIGH' : 'RUN LOW'}</button><b>Weekly</b><em>Active</em></div>
+        </header>
+        <div className='mini-chart'>
+            <strong>✓ {direction === 'up' ? 'Continuous Rise' : 'Continuous Fall'} (0/2 Ticks)</strong>
+            <svg viewBox='0 0 620 190' preserveAspectRatio='none' aria-label={`${direction} direction chart`} role='img'><polyline points={direction === 'up' ? '45,150 310,95 565,40' : '45,40 310,95 565,150'} /><circle cx='45' cy={direction === 'up' ? '150' : '40'} r='7' /><circle className='is-middle' cx='310' cy='95' r='7' /><circle cx='565' cy={direction === 'up' ? '40' : '150'} r='7' /></svg>
+            <span className='mini-chart__start'>Start</span><span className='mini-chart__end'>End</span>
+        </div>
+        <div className='direction-stats'><span>ENTRY SPOT<br /><b>{quote}</b></span><span>CONTRACT TYPE<br /><b>0 / 2 Ticks</b></span><span>PAYOUT<br /><b>$3.82 (95%)</b></span></div>
+        <label>Stake<input value={stake} onChange={event => setStake(event.target.value)} inputMode='decimal' /></label>
+        <button className='direction-card__action' type='button' onClick={onBuy} disabled={ticks.length > 0 && ticks.length < 2}>{ticks.length >= 2 ? '✓ TRADE COMPLETE' : direction === 'up' ? '▶ BUY ONLY UPS (2 TICKS)' : '▶ BUY ONLY DOWNS (2 TICKS)'} <small>{ticks.length ? `${ticks.length}/2 incoming ticks` : 'Payoff: $3.82 USD (+95%)'}</small></button>
+    </article>
 );
 
 const TickCard = ({ label, target, stake, setStake, status, ticks, onRun }: { label: string; target: string; stake: string; setStake: (value: string) => void; status: string; ticks: number[]; onRun: () => void }) => {
