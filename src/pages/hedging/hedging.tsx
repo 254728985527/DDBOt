@@ -622,14 +622,12 @@ const Hedging = observer(() => {
                                         quote={formattedQuote}
                                         stake={overStake}
                                         setStake={setOverStake}
-                                        momentum={momentum.up}
                                     />
                                     <DirectionCard
                                         direction='down'
                                         quote={formattedQuote}
                                         stake={underStake}
                                         setStake={setUnderStake}
-                                        momentum={momentum.down}
                                     />
                                 </div>
                                 <div
@@ -922,13 +920,11 @@ const DirectionCard = ({
     quote,
     stake,
     setStake,
-    momentum,
 }: {
     direction: 'up' | 'down';
     quote: string;
     stake: string;
     setStake: (value: string) => void;
-    momentum: number;
 }) => (
     <article className={`direction-card direction-card--${direction}`}>
         <header>
@@ -950,9 +946,6 @@ const DirectionCard = ({
         </header>
         <div className='mini-chart'>
             <strong>✓ {direction === 'up' ? 'Continuous Rise' : 'Continuous Fall'} (0/2 Ticks)</strong>
-            <span className='direction-card__momentum'>
-                {direction === 'up' ? 'UP' : 'DOWN'} MOMENTUM <b>{momentum}</b>
-            </span>
             <svg
                 viewBox='0 0 620 190'
                 preserveAspectRatio='none'
