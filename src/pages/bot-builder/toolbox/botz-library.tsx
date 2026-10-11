@@ -80,6 +80,23 @@ const BotzLibrary = ({ onClose = () => undefined, embedded = false }: BotzLibrar
             if (type && !window.Blockly.Blocks?.[type]) {
                 removed_types.add(type);
                 block.parentElement?.removeChild(block);
+                return;
+            }
+            if (type === 'trade_definition_market') {
+                const defaults = {
+                    TARGET_DIGIT: '0',
+                    QUALIFYING_THRESHOLD: '10',
+                    POOL_TRADE_SCOPE: 'all_gt_15',
+                    POOL_ENABLED: 'TRUE',
+                };
+                Object.entries(defaults).forEach(([name, value]) => {
+                    if (!block.querySelector(`field[name="${name}"]`)) {
+                        const field = xml_dom.createElement('field');
+                        field.setAttribute('name', name);
+                        field.textContent = value;
+                        block.appendChild(field);
+                    }
+                });
             }
         });
         return {
