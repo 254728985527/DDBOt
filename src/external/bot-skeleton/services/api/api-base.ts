@@ -117,7 +117,10 @@ class APIBase {
             });
         }
 
-        if (!this.has_active_symbols && !V2GetActiveToken()) {
+        // Bot Builder and Chart need market metadata for both guest and authenticated sessions.
+        // Previously the token check skipped active_symbols for logged-in users, leaving every
+        // dynamic Blockly dropdown on the fallback "Not available" option.
+        if (!this.has_active_symbols) {
             this.active_symbols_promise = this.getActiveSymbols();
         }
 
