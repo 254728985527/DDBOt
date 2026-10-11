@@ -74,6 +74,7 @@ const Hedging = () => {
     const [predictionDigit, setPredictionDigit] = useState('5');
     const [quote, setQuote] = useState<number | null>(null);
     const [epoch, setEpoch] = useState<number | null>(null);
+    const MAX_HEDGE_TICKS = 5;
     const [tickHistory, setTickHistory] = useState<number[]>([]);
     const tickKeysRef = useRef(new Set<string>());
     const [marketStats, setMarketStats] = useState<Record<string, MarketStats>>({});
@@ -178,7 +179,7 @@ const Hedging = () => {
             if (tick.symbol !== symbol) return;
             setQuote(quote);
             setEpoch(tick.epoch ?? null);
-            setTickHistory(previous => [...previous, quote].slice(-240));
+            setTickHistory(previous => (previous.length >= MAX_HEDGE_TICKS ? previous : [...previous, quote]));
         };
         publicSocket.addEventListener('open', () => {
             setTickSubscriptionActive(true);
@@ -944,7 +945,7 @@ const TickCard = ({
 }) => {
     const [enabled, setEnabled] = useState(false);
     const is_high = label === 'High Tick';
-    const chartTicks = ticks;
+    const chartTicks = ticks.slice(0, 5);
     const targetIndex = chartTicks.length
         ? chartTicks.reduce(
               (best, value, index, values) =>
