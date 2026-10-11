@@ -6,32 +6,21 @@ import { excludeOptionFromContextMenu, modifyContextMenu, runIrreversibleEvents 
 window.Blockly.Blocks.trade_definition_market = {
     init() {
         this.jsonInit({
-            message0: localize(
-                'Manual digit: {{ manual_digit_toggle }} {{ manual_digit }} Market: {{ input_market }} > {{ input_submarket }} > {{ input_symbol }}',
+            message0: localize('Market: {{ input_market }} > {{ input_submarket }} > {{ input_symbol }}', {
+                input_market: '%1',
+                input_submarket: '%2',
+                input_symbol: '%3',
+            }),
+            message1: localize(
+                'POOL   Target digit {{ target_digit }} > Qualifying threshold (%) {{ qualifying_threshold }} > pool trade scope {{ pool_trade_scope }} {{ pool_enabled }}',
                 {
-                    manual_digit_toggle: '%1',
-                    manual_digit: '%2',
-                    input_market: '%3',
-                    input_submarket: '%4',
-                    input_symbol: '%5',
+                    target_digit: '%1',
+                    qualifying_threshold: '%2',
+                    pool_trade_scope: '%3',
+                    pool_enabled: '%4',
                 }
             ),
             args0: [
-                {
-                    type: 'field_checkbox',
-                    name: 'MANUAL_DIGIT_ENABLED',
-                    checked: false,
-                    class: 'blocklyCheckbox',
-                },
-                {
-                    type: 'field_number',
-                    name: 'MANUAL_DIGIT',
-                    value: 0,
-                    min: 0,
-                    max: 9,
-                    precision: 1,
-                    class: 'manualDigitInput',
-                },
                 {
                     type: 'field_dropdown',
                     name: 'MARKET_LIST',
@@ -48,6 +37,38 @@ window.Blockly.Blocks.trade_definition_market = {
                     options: [['', '']],
                 },
             ],
+            args1: [
+                {
+                    type: 'field_dropdown',
+                    name: 'TARGET_DIGIT',
+                    options: Array.from({ length: 10 }, (_, digit) => [String(digit), String(digit)]),
+                },
+                {
+                    type: 'field_dropdown',
+                    name: 'QUALIFYING_THRESHOLD',
+                    options: Array.from({ length: 13 }, (_, index) => {
+                        const percentage = index + 10;
+                        return [`${percentage}%`, String(percentage)];
+                    }),
+                },
+                {
+                    type: 'field_dropdown',
+                    name: 'POOL_TRADE_SCOPE',
+                    options: [
+                        ['All markets >15%', 'all_gt_15'],
+                        ['1 market', '1'],
+                        ['2 markets', '2'],
+                        ['3 markets', '3'],
+                        ['4 markets', '4'],
+                        ['5 markets', '5'],
+                    ],
+                },
+                {
+                    type: 'field_checkbox',
+                    name: 'POOL_ENABLED',
+                    checked: true,
+                },
+            ],
             colour: window.Blockly.Colours.Special1.colour,
             colourSecondary: window.Blockly.Colours.Special1.colourSecondary,
             colourTertiary: window.Blockly.Colours.Special1.colourTertiary,
@@ -57,7 +78,6 @@ window.Blockly.Blocks.trade_definition_market = {
 
         this.setMovable(false);
         this.setDeletable(false);
-        this.getField('MANUAL_DIGIT').setVisible(true);
     },
     customContextMenu(menu) {
         const menu_items = [localize('Enable Block'), localize('Disable Block')];
@@ -83,14 +103,14 @@ window.Blockly.Blocks.trade_definition_market = {
         const { active_symbols } = ApiHelpers?.instance ?? {};
         if (!active_symbols) return;
 
-        const manual_digit_toggle = this.getField('MANUAL_DIGIT_ENABLED');
-        const manual_digit_input = this.getField('MANUAL_DIGIT');
-        const manual_digit_enabled = manual_digit_toggle?.getValue() === 'TRUE';
-        manual_digit_input?.setVisible(manual_digit_enabled);
-        if (manual_digit_enabled && (event.blockId === this.id || event.type === window.Blockly.Events.BLOCK_CREATE)) {
+        const target_digit = this.getField('TARGET_DIGIT')?.getValue();
+        if (
+            target_digit !== undefined &&
+            (event.blockId === this.id || event.type === window.Blockly.Events.BLOCK_CREATE)
+        ) {
             const trade_options = this.getRootBlock()?.getChildByType('trade_definition_tradeoptions');
             const prediction_block = trade_options?.getInput('PREDICTION')?.connection?.targetBlock();
-            if (prediction_block) prediction_block.setFieldValue(manual_digit_input.getValue(), 'NUM');
+            if (prediction_block) prediction_block.setFieldValue(target_digit, 'NUM');
         }
 
         const market_dropdown = this.getField('MARKET_LIST');
