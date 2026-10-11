@@ -276,7 +276,37 @@ window.Blockly.Blocks.trade_definition_tradeoptions = {
     },
     updateDurationInput(should_use_default_unit, should_update_value) {
         const { contracts_for } = ApiHelpers?.instance ?? {};
-        if (!contracts_for) return;
+        const applyDurationOptions = durations => {
+            this.durations = durations;
+            const duration_field_dropdown = this.getField('DURATIONTYPE_LIST');
+            const duration_input = this.getInput('DURATION');
+            const duration_options = durations.map(duration => [duration.display, duration.unit]);
+            const current_unit = duration_field_dropdown?.getValue();
+            const default_unit = durations.some(duration => duration.unit === current_unit) ? current_unit : 't';
+
+            duration_field_dropdown?.updateOptions(duration_options, {
+                default_value: should_use_default_unit ? default_unit : current_unit,
+            });
+
+            if (duration_input?.connection && should_update_value) {
+                const target_block = duration_input.connection.targetBlock();
+                if (target_block?.isShadow()) {
+                    const selected_duration =
+                        durations.find(duration => duration.unit === default_unit) || durations[0];
+                    if (selected_duration) target_block.setFieldValue(String(selected_duration.min), 'NUM');
+                }
+            }
+        };
+        if (!contracts_for) {
+            applyDurationOptions([
+                { display: 'Ticks', unit: 't', min: 1 },
+                { display: 'Seconds', unit: 's', min: 1 },
+                { display: 'Minutes', unit: 'm', min: 1 },
+                { display: 'Hours', unit: 'h', min: 1 },
+                { display: 'Days', unit: 'd', min: 1 },
+            ]);
+            return;
+        }
 
         if (this.selected_trade_type === 'accumulator' && this.isDescendantOf('trade_definition')) {
             runIrreversibleEvents(() => {
@@ -384,30 +414,17 @@ window.Blockly.Blocks.trade_definition_tradeoptions = {
             });
         } else {
             contracts_for.getDurations(this.selected_symbol, this.selected_trade_type).then(durations => {
-                // Keep duration in memory so we can later reference them for validation
-                this.durations = durations;
-
-                const duration_field_dropdown = this.getField('DURATIONTYPE_LIST');
-                const duration_input = this.getInput('DURATION');
-                const duration_options = durations.map(duration => [duration.display, duration.unit]);
-
-                duration_field_dropdown?.updateOptions(duration_options, {
-                    default_value: should_use_default_unit ? undefined : duration_field_dropdown.getValue(),
-                });
-
-                if (should_update_value && duration_input && duration_input.connection) {
-                    const target_block = duration_input.connection.targetBlock();
-
-                    if (target_block && target_block.isShadow()) {
-                        const min_duration = durations.find(duration => duration.unit === this.selected_duration);
-
-                        if (min_duration) {
-                            runIrreversibleEvents(() => {
-                                target_block.setFieldValue(min_duration.min, 'NUM');
-                            });
-                        }
-                    }
-                }
+                applyDurationOptions(
+                    durations.length
+                        ? durations
+                        : [
+                              { display: 'Ticks', unit: 't', min: 1 },
+                              { display: 'Seconds', unit: 's', min: 1 },
+                              { display: 'Minutes', unit: 'm', min: 1 },
+                              { display: 'Hours', unit: 'h', min: 1 },
+                              { display: 'Days', unit: 'd', min: 1 },
+                          ]
+                );
             });
         }
         const {
