@@ -101,12 +101,18 @@ importers:
       html-react-parser:
         specifier: ^5.1.18
         version: 5.2.17(@types/react@18.3.31)(react@18.3.1)
+      immutable:
+        specifier: ^5.1.9
+        version: 5.1.9
       js-cookie:
         specifier: ^3.0.5
         version: 3.0.8
       localforage:
         specifier: ^1.10.0
         version: 1.10.0
+      lodash.debounce:
+        specifier: ^4.0.8
+        version: 4.0.8
       lz-string:
         specifier: ^1.5.0
         version: 1.5.0
@@ -119,9 +125,15 @@ importers:
       moment:
         specifier: ^2.30.1
         version: 2.31.0
+      object.fromentries:
+        specifier: ^2.0.8
+        version: 2.0.8
       pako:
         specifier: ^2.1.0
         version: 2.2.0
+      prop-types:
+        specifier: ^15.8.1
+        version: 15.8.1
       react:
         specifier: ^18.2.0
         version: 18.3.1
@@ -161,6 +173,9 @@ importers:
       redux-thunk:
         specifier: ^3.1.0
         version: 3.1.0(redux@5.0.1)
+      rxjs:
+        specifier: ^7.8.2
+        version: 7.8.2
       trackjs:
         specifier: ^3.10.4
         version: 3.10.4
