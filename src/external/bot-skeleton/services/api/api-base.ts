@@ -255,20 +255,52 @@ class APIBase {
         await Promise.all(streamsToSubscribe.map(subscribeToStream));
     }
 
+    waitForSocketOpen = async () => {
+        const connection = this.api?.connection;
+        if (!connection) return false;
+        if (connection.readyState === 1) return true;
+        if (connection.readyState !== 0) return false;
+
+        return new Promise<boolean>(resolve => {
+            const onOpen = () => {
+                connection.removeEventListener('open', onOpen);
+                connection.removeEventListener('error', onError);
+                resolve(true);
+            };
+            const onError = () => {
+                connection.removeEventListener('open', onOpen);
+                connection.removeEventListener('error', onError);
+                resolve(false);
+            };
+            connection.addEventListener('open', onOpen);
+            connection.addEventListener('error', onError);
+        });
+    };
+
     getActiveSymbols = async () => {
-        await doUntilDone(() => this.api?.send({ active_symbols: 'brief' }), [], this).then(
-            ({ active_symbols = [], error = {} }) => {
-                const pip_sizes = {};
-                if (active_symbols.length) this.has_active_symbols = true;
-                active_symbols.forEach(({ symbol, pip }: { symbol: string; pip: string }) => {
-                    (pip_sizes as Record<string, number>)[symbol] = +(+pip).toExponential().substring(3);
-                });
-                this.pip_sizes = pip_sizes as Record<string, number>;
-                this.toggleRunButton(false);
-                this.active_symbols = active_symbols;
-                return active_symbols || error;
-            }
-        );
+        const is_open = await this.waitForSocketOpen();
+        if (!is_open || !this.api) return;
+
+        await doUntilDone(
+            () =>
+                this.api?.send({
+                    active_symbols: 'brief',
+                    contract_type: ['CALL', 'PUT'],
+                    req_id: 1,
+                }),
+            [],
+            this
+        ).then(({ active_symbols = [], error = {} }) => {
+            const pip_sizes = {};
+            if (active_symbols.length) this.has_active_symbols = true;
+            active_symbols.forEach(({ symbol, pip }: { symbol: string; pip: string }) => {
+                (pip_sizes as Record<string, number>)[symbol] = +(+pip).toExponential().substring(3);
+            });
+            this.pip_sizes = pip_sizes as Record<string, number>;
+            this.toggleRunButton(false);
+            this.active_symbols = active_symbols;
+            return active_symbols || error;
+        });
     };
 
     toggleRunButton = (toggle: boolean) => {
