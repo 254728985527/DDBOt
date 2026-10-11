@@ -132,6 +132,69 @@ registerHedgePurchase(
 );
 
 registerHedgePurchase(
+    'apollo_hedge_purchase',
+    'APOLLO Hedge purchase  Purchase A: %1  Barrier: %2 %3  Second barrier: %4 %5  Prediction: %6  Purchase B: %7  Barrier: %8 %9  Second barrier: %10 %11  Prediction: %12',
+    [
+        {
+            type: 'field_dropdown',
+            name: 'PURCHASE_A',
+            options: [
+                ['Digit Over', 'DIGITOVER'],
+                ['Digit Under', 'DIGITUNDER'],
+            ],
+        },
+        {
+            type: 'field_dropdown',
+            name: 'BARRIER_A_SIGN',
+            options: [
+                ['+', 'PLUS'],
+                ['-', 'MINUS'],
+            ],
+        },
+        numberField('BARRIER_A_VALUE', '0.1'),
+        {
+            type: 'field_dropdown',
+            name: 'SECOND_BARRIER_A_SIGN',
+            options: [
+                ['+', 'PLUS'],
+                ['-', 'MINUS'],
+            ],
+        },
+        numberField('SECOND_BARRIER_A_VALUE', '0.1'),
+        numberField('PREDICTION_A', '1'),
+        {
+            type: 'field_dropdown',
+            name: 'PURCHASE_B',
+            options: [
+                ['Digit Over', 'DIGITOVER'],
+                ['Digit Under', 'DIGITUNDER'],
+            ],
+        },
+        {
+            type: 'field_dropdown',
+            name: 'BARRIER_B_SIGN',
+            options: [
+                ['+', 'PLUS'],
+                ['-', 'MINUS'],
+            ],
+        },
+        numberField('BARRIER_B_VALUE', '0.1'),
+        {
+            type: 'field_dropdown',
+            name: 'SECOND_BARRIER_B_SIGN',
+            options: [
+                ['+', 'PLUS'],
+                ['-', 'MINUS'],
+            ],
+        },
+        numberField('SECOND_BARRIER_B_VALUE', '0.1'),
+        numberField('PREDICTION_B', '1'),
+    ],
+    block =>
+        `Bot.purchase('${block.getFieldValue('PURCHASE_A')}');\nBot.purchase('${block.getFieldValue('PURCHASE_B')}');\n`
+);
+
+registerHedgePurchase(
     'over_under_hedge_purchase',
     'OVER/UNDER Hedge purchase  Purchase 1: %1  stake 1: %2  Prediction: %3  Purchase 2: %4  stake 2: %5  Prediction: %6',
     [

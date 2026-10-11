@@ -174,6 +174,7 @@ export const ToolboxItems = () => {
                 <Block type='higher_lower_hedge_purchase' />
                 <Block type='only_ups_downs_hedge_purchase' />
                 <Block type='over_under_hedge_purchase' />
+                <Block type='apollo_hedge_purchase' />
             </Category>
             <Category id='sell_conditions' name={localize('Sell conditions (optional)')}>
                 <Block type='during_purchase' />
