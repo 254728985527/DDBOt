@@ -277,12 +277,24 @@ window.Blockly.Blocks.trade_definition_tradeoptions = {
     updateDurationInput(should_use_default_unit, should_update_value) {
         const { contracts_for } = ApiHelpers?.instance ?? {};
         const applyDurationOptions = durations => {
-            this.durations = durations;
+            const valid_durations = durations.filter(duration => duration?.unit && duration.unit !== 'na');
+            const normalized_durations = valid_durations.length
+                ? valid_durations
+                : [
+                      { display: 'Ticks', unit: 't', min: 1, max: 10 },
+                      { display: 'Seconds', unit: 's', min: 1, max: 86400 },
+                      { display: 'Minutes', unit: 'm', min: 1, max: 1440 },
+                      { display: 'Hours', unit: 'h', min: 1, max: 24 },
+                      { display: 'Days', unit: 'd', min: 1, max: 1 },
+                  ];
+            this.durations = normalized_durations;
             const duration_field_dropdown = this.getField('DURATIONTYPE_LIST');
             const duration_input = this.getInput('DURATION');
-            const duration_options = durations.map(duration => [duration.display, duration.unit]);
+            const duration_options = normalized_durations.map(duration => [duration.display, duration.unit]);
             const current_unit = duration_field_dropdown?.getValue();
-            const default_unit = durations.some(duration => duration.unit === current_unit) ? current_unit : 't';
+            const default_unit = normalized_durations.some(duration => duration.unit === current_unit)
+                ? current_unit
+                : 't';
 
             duration_field_dropdown?.updateOptions(duration_options, {
                 default_value: should_use_default_unit ? default_unit : current_unit,
@@ -292,7 +304,8 @@ window.Blockly.Blocks.trade_definition_tradeoptions = {
                 const target_block = duration_input.connection.targetBlock();
                 if (target_block?.isShadow()) {
                     const selected_duration =
-                        durations.find(duration => duration.unit === default_unit) || durations[0];
+                        normalized_durations.find(duration => duration.unit === default_unit) ||
+                        normalized_durations[0];
                     if (selected_duration) target_block.setFieldValue(String(selected_duration.min), 'NUM');
                 }
             }
@@ -414,17 +427,7 @@ window.Blockly.Blocks.trade_definition_tradeoptions = {
             });
         } else {
             contracts_for.getDurations(this.selected_symbol, this.selected_trade_type).then(durations => {
-                applyDurationOptions(
-                    durations.length
-                        ? durations
-                        : [
-                              { display: 'Ticks', unit: 't', min: 1 },
-                              { display: 'Seconds', unit: 's', min: 1 },
-                              { display: 'Minutes', unit: 'm', min: 1 },
-                              { display: 'Hours', unit: 'h', min: 1 },
-                              { display: 'Days', unit: 'd', min: 1 },
-                          ]
-                );
+                applyDurationOptions(durations);
             });
         }
         const {
