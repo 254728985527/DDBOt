@@ -8,7 +8,7 @@ window.Blockly.FieldDropdown.prototype.updateOptions = function (dropdown_option
     const unavailable_options = !dropdown_options?.length || dropdown_options.some(option => option?.[1] === 'na');
     const fallback_options = {
         MARKET_LIST: [
-            ['Derived', 'derived'],
+            ['Derived', 'synthetic_index'],
             ['Stock Indices', 'stock_indices'],
             ['Cryptocurrencies', 'cryptocurrency'],
             ['Forex', 'forex'],

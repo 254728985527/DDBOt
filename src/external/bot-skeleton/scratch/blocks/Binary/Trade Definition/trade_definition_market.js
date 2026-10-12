@@ -6,11 +6,7 @@ import { excludeOptionFromContextMenu, modifyContextMenu, runIrreversibleEvents 
 window.Blockly.Blocks.trade_definition_market = {
     init() {
         this.jsonInit({
-            message0: localize('Market: {{ input_market }} > {{ input_submarket }} > {{ input_symbol }}', {
-                input_market: '%1',
-                input_submarket: '%2',
-                input_symbol: '%3',
-            }),
+            message0: 'Market: %1  >  %2  >  %3',
             message1: localize(
                 'POOL   Target digit {{ target_digit }} > Qualifying threshold (%) {{ qualifying_threshold }} > pool trade scope {{ pool_trade_scope }} {{ pool_enabled }}',
                 {
