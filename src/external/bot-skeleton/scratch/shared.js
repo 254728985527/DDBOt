@@ -7,7 +7,7 @@ export const saveAs = ({ data, filename, type }) => {
 };
 
 export const getContractTypeOptions = (contract_type, trade_type) => {
-    const trade_types = config().opposites[trade_type.toUpperCase()];
+    const trade_types = trade_type ? config().opposites[trade_type.toUpperCase()] : undefined;
 
     if (!trade_types) {
         return config().NOT_AVAILABLE_DROPDOWN_OPTIONS;

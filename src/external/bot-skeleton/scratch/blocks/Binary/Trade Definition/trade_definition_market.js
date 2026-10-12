@@ -24,29 +24,17 @@ window.Blockly.Blocks.trade_definition_market = {
                 {
                     type: 'field_dropdown',
                     name: 'MARKET_LIST',
-                    options: [
-                        ['Synthetic indices', 'synthetic_index'],
-                        ['Derived indices', 'derived'],
-                        ['Forex', 'forex'],
-                    ],
+                    options: [['Not available', 'na']],
                 },
                 {
                     type: 'field_dropdown',
                     name: 'SUBMARKET_LIST',
-                    options: [
-                        ['Continuous indices', 'continuous_indices'],
-                        ['Daily reset indices', 'daily_reset_indices'],
-                        ['Jump indices', 'jump_indices'],
-                    ],
+                    options: [['Not available', 'na']],
                 },
                 {
                     type: 'field_dropdown',
                     name: 'SYMBOL_LIST',
-                    options: [
-                        ['Volatility 100 Index', 'R_100'],
-                        ['Volatility 75 Index', 'R_75'],
-                        ['Volatility 50 Index', 'R_50'],
-                    ],
+                    options: [['Not available', 'na']],
                 },
             ],
             args1: [
