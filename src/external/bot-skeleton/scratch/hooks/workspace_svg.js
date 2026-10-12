@@ -79,8 +79,8 @@ window.Blockly.WorkspaceSvg.prototype.centerOnBlock = function (id, hideChaff = 
 window.Blockly.WorkspaceSvg.prototype.lastAddedBlock = null;
 
 window.Blockly.WorkspaceSvg.prototype.addBlockNode = function (block_node) {
-    const { flyout } = DBotStore.instance;
-    if (block_node) {
+    const flyout = DBotStore.instance?.flyout;
+    if (block_node && flyout?.getFlyout?.()?.targetWorkspace) {
         const top_blocks = this.getTopBlocks(true);
         const block = window.Blockly.Xml.domToBlock(block_node, flyout.getFlyout().targetWorkspace);
         // // Remove highlight from all blocks
