@@ -71,11 +71,23 @@ window.Blockly.Blocks.purchase = {
             const purchase_type_list = this.getField('PURCHASE_LIST');
             const purchase_type = purchase_type_list.getValue();
             const contract_type_options = getContractTypeOptions(contract_type, trade_type);
+            const fallback_options = [
+                ['Purchase', 'purchase'],
+                ['Call', 'CALL'],
+                ['Put', 'PUT'],
+            ];
+            const usable_options = contract_type_options?.filter(([label, value]) => label && value && value !== 'na')
+                ?.length
+                ? contract_type_options
+                : fallback_options;
 
-            purchase_type_list.updateOptions(contract_type_options, {
-                default_value: purchase_type,
+            purchase_type_list.updateOptions(usable_options, {
+                default_value: usable_options.some(([, value]) => value === purchase_type)
+                    ? purchase_type
+                    : usable_options[0][1],
                 event_group: event.group,
-                should_pretend_empty: true,
+                should_pretend_empty: false,
+                should_trigger_event: false,
             });
         }
     },
