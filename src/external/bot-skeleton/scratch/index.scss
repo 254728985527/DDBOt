@@ -507,7 +507,12 @@ drag a block and selected text moves instead.
     }
 
     .blocklyFieldDropdown:not(.blocklyHidden) {
-        display: block;
+        display: inline-block;
+        white-space: nowrap;
+    }
+
+    .blocklyFieldDropdown .blocklyText {
+        white-space: nowrap;
     }
 
     .blocklyIconGroup {
