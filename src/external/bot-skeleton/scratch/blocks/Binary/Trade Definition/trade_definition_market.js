@@ -24,17 +24,26 @@ window.Blockly.Blocks.trade_definition_market = {
                 {
                     type: 'field_dropdown',
                     name: 'MARKET_LIST',
-                    options: [['Not available', 'na']],
+                    options: [
+                        ['Derived Indices', 'synthetic_index'],
+                        ['Forex', 'forex'],
+                        ['Commodities', 'commodities'],
+                        ['Cryptocurrencies', 'cryptocurrency'],
+                    ],
                 },
                 {
                     type: 'field_dropdown',
                     name: 'SUBMARKET_LIST',
-                    options: [['Not available', 'na']],
+                    options: [['Continuous Indices', 'random_index']],
                 },
                 {
                     type: 'field_dropdown',
                     name: 'SYMBOL_LIST',
-                    options: [['Not available', 'na']],
+                    options: [
+                        ['Volatility 100 Index', 'R_100'],
+                        ['Volatility 75 Index', 'R_75'],
+                        ['Volatility 50 Index', 'R_50'],
+                    ],
                 },
             ],
             args1: [

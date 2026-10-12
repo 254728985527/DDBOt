@@ -12,12 +12,18 @@ window.Blockly.Blocks.trade_definition_tradetype = {
                 {
                     type: 'field_dropdown',
                     name: 'TRADETYPECAT_LIST',
-                    options: [['Not available', 'na']],
+                    options: [
+                        ['Up/Down', 'callput'],
+                        ['Digits', 'digits'],
+                    ],
                 },
                 {
                     type: 'field_dropdown',
                     name: 'TRADETYPE_LIST',
-                    options: [['Not available', 'na']],
+                    options: [
+                        ['Rise/Fall', 'callput'],
+                        ['Higher/Lower', 'higherlower'],
+                    ],
                 },
             ],
             colour: window.Blockly.Colours.Special1.colour,

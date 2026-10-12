@@ -11,7 +11,11 @@ window.Blockly.Blocks.trade_definition_contracttype = {
                 {
                     type: 'field_dropdown',
                     name: 'TYPE_LIST',
-                    options: [['Not available', 'na']],
+                    options: [
+                        ['Both', 'both'],
+                        ['Call', 'CALL'],
+                        ['Put', 'PUT'],
+                    ],
                 },
             ],
             colour: window.Blockly.Colours.Special1.colour,
