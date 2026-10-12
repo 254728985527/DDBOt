@@ -66,7 +66,7 @@ const populateLoadedTradeOptions = async (workspace, savedValues, event_group) =
     const contract = workspace.getBlocksByType('trade_definition_contracttype', false)[0];
     const purchase = workspace.getBlocksByType('purchase', false)[0];
     const active_symbols = ApiHelpers.instance?.active_symbols;
-    if (!market || !active_symbols?.is_initialised) return;
+    if (!market || !active_symbols) return;
 
     const update = (block, name, options, saved_value) => {
         const valid_options = Array.isArray(options) ? options : [];
@@ -90,16 +90,30 @@ const populateLoadedTradeOptions = async (workspace, savedValues, event_group) =
 
     const contracts_for = ApiHelpers.instance?.contracts_for;
     const symbol = market.getFieldValue('SYMBOL_LIST');
-    const category_options =
-        (await contracts_for?.getTradeTypeCategories?.(selected_market, selected_submarket, symbol)) ||
-        tradeType.getField('TRADETYPECAT_LIST')?.menuGenerator_ ||
-        [];
+    const category_options = (await contracts_for?.getTradeTypeCategories?.(
+        selected_market,
+        selected_submarket,
+        symbol
+    )) || [
+        ['Up/Down', 'callput'],
+        ['Digits', 'digits'],
+    ];
     update(tradeType, 'TRADETYPECAT_LIST', category_options, savedValues.TRADETYPECAT_LIST);
     const selected_category = tradeType.getFieldValue('TRADETYPECAT_LIST');
+    const fallback_types = {
+        callput: [
+            ['Rise/Fall', 'callput'],
+            ['Higher/Lower', 'higherlower'],
+        ],
+        digits: [
+            ['Over/Under', 'overunder'],
+            ['Even/Odd', 'evenodd'],
+        ],
+    };
     const type_options =
         (await contracts_for?.getTradeTypes?.(selected_market, selected_submarket, symbol, selected_category)) ||
-        tradeType.getField('TRADETYPE_LIST')?.menuGenerator_ ||
-        [];
+        fallback_types[selected_category] ||
+        fallback_types.callput;
     update(tradeType, 'TRADETYPE_LIST', type_options, savedValues.TRADETYPE_LIST);
     const contract_options = getContractTypeOptions('both', tradeType.getFieldValue('TRADETYPE_LIST')) || [];
     update(

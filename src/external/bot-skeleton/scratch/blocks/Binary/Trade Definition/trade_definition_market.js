@@ -124,10 +124,17 @@ window.Blockly.Blocks.trade_definition_market = {
         const market_options = active_symbols.getMarketDropdownOptions();
         const is_unavailable = options => !options?.length || (options.length === 1 && options[0]?.[1] === 'na');
         if (!active_symbols.is_initialised || is_unavailable(market_options)) {
+            const refresh_id = (this._dropdown_refresh_id || 0) + 1;
+            this._dropdown_refresh_id = refresh_id;
             const refresh = Promise.resolve(active_symbols.retrieveActiveSymbols?.(true));
             const bounded_refresh = Promise.race([refresh, new Promise(resolve => setTimeout(resolve, 5000))]);
             bounded_refresh.then(() => {
-                if (this.workspace && !this.isDisposed?.()) {
+                if (
+                    this.workspace &&
+                    !this.isDisposed?.() &&
+                    this._dropdown_refresh_id === refresh_id &&
+                    !this.workspace.isLoadingStrategy
+                ) {
                     const refreshed_markets = active_symbols.getMarketDropdownOptions();
                     const refreshed_market_value =
                         market && market !== 'na' ? market : refreshed_markets[0]?.[1] || 'synthetic_index';
