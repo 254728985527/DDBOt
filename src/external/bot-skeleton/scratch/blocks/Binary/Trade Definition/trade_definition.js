@@ -8,13 +8,12 @@ import {
     modifyContextMenu,
     runIrreversibleEvents,
 } from '../../../utils';
-import { tradeParametersIcon } from '../../images';
+import { defineContract } from '../../images';
 
 window.Blockly.Blocks.trade_definition = {
     init() {
         this.jsonInit(this.definition());
         this.setDeletable(false);
-        this.addClass?.('trade-parameters-block');
         this.isInit = false;
     },
     definition() {
@@ -29,10 +28,10 @@ window.Blockly.Blocks.trade_definition = {
             args0: [
                 {
                     type: 'field_image',
-                    src: tradeParametersIcon,
+                    src: defineContract,
                     width: 25,
                     height: 25,
-                    alt: 'Trade parameters',
+                    alt: 'T',
                 },
                 {
                     type: 'field_label',

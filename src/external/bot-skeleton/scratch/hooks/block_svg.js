@@ -11,8 +11,8 @@ window.Blockly.BlockSvg.prototype.removeSelect = function () {
 
 window.Blockly.BlockSvg.prototype.addSelect = function () {
     if (!window.Blockly.derivWorkspace.isFlyoutVisible) {
-        const flyout = DBotStore.instance?.flyout;
-        if (flyout?.setVisibility) {
+        const { flyout } = DBotStore.instance;
+        if (flyout) {
             flyout.setVisibility(false);
         }
 

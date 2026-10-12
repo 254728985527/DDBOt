@@ -10,48 +10,85 @@ export default class ActiveSymbols {
         this.disabled_symbols = config().DISABLED_SYMBOLS;
         this.disabled_submarkets = config().DISABLED_SUBMARKETS;
         this.init_promise = new PendingPromise();
-        this.initialise_promise = null;
         this.is_initialised = false;
         this.processed_symbols = {};
         this.trading_times = trading_times;
     }
 
     async retrieveActiveSymbols(is_forced_update = false) {
-        if (this.initialise_promise && !is_forced_update) return this.initialise_promise;
+        await this.trading_times.initialise();
 
-        this.initialise_promise = (async () => {
-            await this.trading_times.initialise();
-
-            if (api_base.has_active_symbols) {
-                this.active_symbols = api_base?.active_symbols ?? [];
-            } else {
-                await api_base.active_symbols_promise;
-                this.active_symbols = api_base?.active_symbols ?? [];
-            }
-
-            this.processed_symbols = this.processActiveSymbols();
-            this.is_initialised = this.active_symbols.length > 0 && Object.keys(this.processed_symbols).length > 0;
-
-            if (!this.is_initialised) {
-                this.init_promise.resolve();
-                return this.active_symbols;
-            }
-
-            this.trading_times.onMarketOpenCloseChanged = changes => {
-                Object.keys(changes).forEach(symbol_name => {
-                    const symbol_obj = this.active_symbols.find(item => item.symbol === symbol_name);
-                    if (symbol_obj) symbol_obj.exchange_is_open = changes[symbol_name];
-                });
-
-                this.changes = changes;
-                this.processed_symbols = this.processActiveSymbols();
-            };
-
-            this.init_promise.resolve();
+        if (!is_forced_update && this.is_initialised) {
+            await this.init_promise;
             return this.active_symbols;
-        })();
+        }
 
-        return this.initialise_promise;
+        this.is_initialised = true;
+
+        if (api_base.has_active_symbols) {
+            this.active_symbols = api_base?.active_symbols ?? [];
+        } else {
+            await api_base.active_symbols_promise;
+            this.active_symbols = api_base?.active_symbols ?? [];
+        }
+
+        if (!this.active_symbols.length) {
+            this.active_symbols = [
+                {
+                    market: 'synthetic_index',
+                    market_display_name: 'Derived',
+                    submarket: 'random_index',
+                    submarket_display_name: 'Continuous Indices',
+                    symbol: 'R_100',
+                    display_name: 'Volatility 100 Index',
+                    pip: 2,
+                    exchange_is_open: true,
+                    is_trading_suspended: false,
+                },
+                {
+                    market: 'synthetic_index',
+                    market_display_name: 'Derived',
+                    submarket: 'random_index',
+                    submarket_display_name: 'Continuous Indices',
+                    symbol: 'R_75',
+                    display_name: 'Volatility 75 Index',
+                    pip: 2,
+                    exchange_is_open: true,
+                    is_trading_suspended: false,
+                },
+                {
+                    market: 'synthetic_index',
+                    market_display_name: 'Derived',
+                    submarket: 'random_index',
+                    submarket_display_name: 'Continuous Indices',
+                    symbol: 'R_50',
+                    display_name: 'Volatility 50 Index',
+                    pip: 2,
+                    exchange_is_open: true,
+                    is_trading_suspended: false,
+                },
+            ];
+        }
+
+        this.processed_symbols = this.processActiveSymbols();
+
+        // TODO: fix need to look into it as the method is not present
+        this.trading_times.onMarketOpenCloseChanged = changes => {
+            Object.keys(changes).forEach(symbol_name => {
+                const symbol_obj = this.active_symbols[symbol_name];
+
+                if (symbol_obj) {
+                    symbol_obj.exchange_is_open = changes[symbol_name];
+                }
+            });
+
+            this.changes = changes;
+            this.processActiveSymbols();
+        };
+
+        this.init_promise.resolve();
+
+        return this.active_symbols;
     }
 
     processActiveSymbols() {
@@ -177,12 +214,7 @@ export default class ActiveSymbols {
         });
 
         if (market_options.length === 0) {
-            return [
-                ['Derived', 'synthetic_index'],
-                ['Forex', 'forex'],
-                ['Commodities', 'commodities'],
-                ['Cryptocurrencies', 'cryptocurrency'],
-            ];
+            return config().NOT_AVAILABLE_DROPDOWN_OPTIONS;
         }
         market_options.sort(a => (a[1] === 'synthetic_index' ? -1 : 1));
 
@@ -217,13 +249,7 @@ export default class ActiveSymbols {
         }
 
         if (submarket_options.length === 0) {
-            const fallback_submarkets = {
-                synthetic_index: [['Continuous Indices', 'continuous_indices']],
-                forex: [['Major Pairs', 'major_pairs']],
-                commodities: [['Metals', 'metals']],
-                cryptocurrency: [['Cryptocurrency', 'cryptocurrency']],
-            };
-            return fallback_submarkets[market] || config().NOT_AVAILABLE_DROPDOWN_OPTIONS;
+            return config().NOT_AVAILABLE_DROPDOWN_OPTIONS;
         }
         if (market === 'synthetic_index') {
             submarket_options.sort(a => (a[1] === 'random_index' ? -1 : 1));
@@ -252,20 +278,7 @@ export default class ActiveSymbols {
         }, []);
 
         if (symbol_options.length === 0) {
-            const fallback_symbols = {
-                random_index: [
-                    ['Volatility 100 Index', 'R_100'],
-                    ['Volatility 75 Index', 'R_75'],
-                    ['Volatility 50 Index', 'R_50'],
-                ],
-                major_pairs: [
-                    ['EUR/USD', 'frxEURUSD'],
-                    ['GBP/USD', 'frxGBPUSD'],
-                ],
-                metals: [['Gold/USD', 'XAUUSD']],
-                cryptocurrency: [['Bitcoin/USD', 'cryBTCUSD']],
-            };
-            return fallback_symbols[submarket] || config().NOT_AVAILABLE_DROPDOWN_OPTIONS;
+            return config().NOT_AVAILABLE_DROPDOWN_OPTIONS;
         }
 
         return this.sortDropdownOptions(symbol_options, this.isSymbolClosed);
