@@ -4,9 +4,14 @@ import { localize } from '@deriv-com/translations';
 import { observer as globalObserver } from '../../../utils/observer';
 import { error as logError } from './broadcast';
 
+const definedEntries = object =>
+    Object.fromEntries(
+        Object.entries(object).filter(([, value]) => value !== undefined && value !== null && value !== '')
+    );
+
 export const tradeOptionToProposal = (trade_option, purchase_reference) =>
     trade_option.contractTypes.map(type => {
-        const proposal = {
+        const proposal = definedEntries({
             amount: trade_option.amount,
             basis: trade_option.basis,
             contract_type: type,
@@ -20,7 +25,7 @@ export const tradeOptionToProposal = (trade_option, purchase_reference) =>
             },
             proposal: 1,
             symbol: trade_option.symbol,
-        };
+        });
         if (trade_option.prediction !== undefined) {
             proposal.selected_tick = trade_option.prediction;
         }
@@ -33,8 +38,8 @@ export const tradeOptionToProposal = (trade_option, purchase_reference) =>
             proposal.barrier2 = trade_option.secondBarrierOffset;
         }
         if (['MULTUP', 'MULTDOWN'].includes(type)) {
-            proposal.duration = undefined;
-            proposal.duration_unit = undefined;
+            delete proposal.duration;
+            delete proposal.duration_unit;
         }
         if (!isEmptyObject(trade_option.limit_order)) {
             proposal.limit_order = trade_option.limit_order;
@@ -46,7 +51,7 @@ export const tradeOptionToBuy = (contract_type, trade_option) => {
     const buy = {
         buy: '1',
         price: trade_option.amount,
-        parameters: {
+        parameters: definedEntries({
             amount: trade_option.amount,
             basis: trade_option.basis,
             contract_type,
@@ -55,7 +60,7 @@ export const tradeOptionToBuy = (contract_type, trade_option) => {
             duration_unit: trade_option.duration_unit,
             multiplier: trade_option.multiplier,
             symbol: trade_option.symbol,
-        },
+        }),
     };
     if (trade_option.prediction !== undefined) {
         buy.parameters.selected_tick = trade_option.prediction;

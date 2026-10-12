@@ -291,42 +291,7 @@ class APIBase {
             [],
             this
         ).then(({ active_symbols = [], error = {} }) => {
-            const fallback_active_symbols = [
-                {
-                    market: 'synthetic_index',
-                    market_display_name: 'Derived',
-                    submarket: 'random_index',
-                    submarket_display_name: 'Continuous Indices',
-                    symbol: 'R_100',
-                    display_name: 'Volatility 100 Index',
-                    pip: 2,
-                    exchange_is_open: true,
-                    is_trading_suspended: false,
-                },
-                {
-                    market: 'synthetic_index',
-                    market_display_name: 'Derived',
-                    submarket: 'random_index',
-                    submarket_display_name: 'Continuous Indices',
-                    symbol: 'R_75',
-                    display_name: 'Volatility 75 Index',
-                    pip: 2,
-                    exchange_is_open: true,
-                    is_trading_suspended: false,
-                },
-                {
-                    market: 'synthetic_index',
-                    market_display_name: 'Derived',
-                    submarket: 'random_index',
-                    submarket_display_name: 'Continuous Indices',
-                    symbol: 'R_50',
-                    display_name: 'Volatility 50 Index',
-                    pip: 2,
-                    exchange_is_open: true,
-                    is_trading_suspended: false,
-                },
-            ];
-            const resolved_active_symbols = active_symbols.length ? active_symbols : fallback_active_symbols;
+            const resolved_active_symbols = active_symbols;
             const pip_sizes = {};
             this.has_active_symbols = resolved_active_symbols.length > 0;
             resolved_active_symbols.forEach(({ symbol, pip }: { symbol: string; pip: string | number }) => {
