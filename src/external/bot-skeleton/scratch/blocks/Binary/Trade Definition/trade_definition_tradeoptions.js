@@ -34,7 +34,11 @@ window.Blockly.Blocks.trade_definition_tradeoptions = {
                 {
                     type: 'field_dropdown',
                     name: 'DURATIONTYPE_LIST',
-                    options: [['', '']],
+                    options: [
+                        ['Ticks', 't'],
+                        ['Minutes', 'm'],
+                        ['Hours', 'h'],
+                    ],
                 },
                 {
                     type: 'input_value',

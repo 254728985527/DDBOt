@@ -12,12 +12,20 @@ window.Blockly.Blocks.trade_definition_tradetype = {
                 {
                     type: 'field_dropdown',
                     name: 'TRADETYPECAT_LIST',
-                    options: [['', '']],
+                    options: [
+                        ['High/Low', 'high_low'],
+                        ['Digits', 'digits'],
+                        ['Multipliers', 'multipliers'],
+                    ],
                 },
                 {
                     type: 'field_dropdown',
                     name: 'TRADETYPE_LIST',
-                    options: [['', '']],
+                    options: [
+                        ['Over', 'over'],
+                        ['Under', 'under'],
+                        ['Equals', 'equals'],
+                    ],
                 },
             ],
             colour: window.Blockly.Colours.Special1.colour,
