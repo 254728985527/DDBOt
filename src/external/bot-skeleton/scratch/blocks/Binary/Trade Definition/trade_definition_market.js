@@ -77,7 +77,6 @@ window.Blockly.Blocks.trade_definition_market = {
             colour: window.Blockly.Colours.Special1.colour,
             colourSecondary: window.Blockly.Colours.Special1.colourSecondary,
             colourTertiary: window.Blockly.Colours.Special1.colourTertiary,
-            inputsInline: true,
             previousStatement: null,
             nextStatement: null,
         });
