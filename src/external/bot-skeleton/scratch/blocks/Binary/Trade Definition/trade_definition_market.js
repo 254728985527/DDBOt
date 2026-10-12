@@ -8,12 +8,13 @@ window.Blockly.Blocks.trade_definition_market = {
         this.jsonInit({
             message0: 'Market: %1  >  %2  >  %3',
             message1: localize(
-                'POOL   Target digit {{ target_digit }} > Qualifying threshold (%) {{ qualifying_threshold }} > pool trade scope {{ pool_trade_scope }} {{ pool_enabled }}',
+                'Pool: {{ pool_strategy }} > Target digit {{ target_digit }} > Qualifying threshold (%) {{ qualifying_threshold }} > pool trade scope {{ pool_trade_scope }} {{ pool_enabled }}',
                 {
-                    target_digit: '%1',
-                    qualifying_threshold: '%2',
-                    pool_trade_scope: '%3',
-                    pool_enabled: '%4',
+                    pool_strategy: '%1',
+                    target_digit: '%2',
+                    qualifying_threshold: '%3',
+                    pool_trade_scope: '%4',
+                    pool_enabled: '%5',
                 }
             ),
             args0: [
@@ -43,6 +44,11 @@ window.Blockly.Blocks.trade_definition_market = {
                 },
             ],
             args1: [
+                {
+                    type: 'field_dropdown',
+                    name: 'POOL_STRATEGY',
+                    options: [['Target digit', 'target_digit']],
+                },
                 {
                     type: 'field_dropdown',
                     name: 'TARGET_DIGIT',

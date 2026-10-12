@@ -510,6 +510,19 @@ drag a block and selected text moves instead.
         display: block;
     }
 
+    .trade-parameters-block .blocklyTextRootBlockHeader {
+        fill: #fff;
+        color: #fff;
+        font-size: 1.9rem;
+        font-weight: 600;
+    }
+
+    .trade-parameters-block .blocklyFieldDropdown .blocklyText,
+    .trade-parameters-block .blocklyFieldCheckbox .blocklyText {
+        fill: #344054;
+        color: #344054;
+    }
+
     .blocklyIconGroup {
         cursor: default;
     }

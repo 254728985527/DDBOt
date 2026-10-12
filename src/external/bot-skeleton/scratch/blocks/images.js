@@ -1,3 +1,6 @@
+export const tradeParametersIcon =
+    'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><g fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2" fill="%23064e72"/><circle cx="15" cy="12" r="2" fill="%23064e72"/><circle cx="8" cy="18" r="2" fill="%23064e72"/></g></svg>';
+
 export const defineContract =
     // 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYAgMAAACdGdVrAAAAAXNSR0IB2cksfwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAlQTFRFAAAAMzMzMzMzaARWNQAAAAN0Uk5TAID/7PezGAAAACFJREFUeJxjYEAFUqtWLQFSCgwMHDipplXUF0ShoI5ABgDTPwulgF1l+wAAAABJRU5ErkJggg==';
     'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAAGXcA1uAAAAAXNSR0IArs4c6QAAAK9JREFUSA3tVUkOgCAMROP/f4PfU4iOaWQKLYmBg71AOksXTAyhGkeKKuECjTSDUwcFxVdNawNgQ10omJNKROqiJbMJsKJZgKgEouuESRYVFVxO35JTnxGDvk9aWQ5GCXfSPbRbsLHysr0lBeMESaKE3hkmbKk230SY9Ulky5rG/SVJU8udPrMU5s7w9bEugUlN886MWiJN86/o2dywFQ17g10b+dlJefH9X0t9X+YETM6gfmoeI+MAAAAASUVORK5CYII=';
