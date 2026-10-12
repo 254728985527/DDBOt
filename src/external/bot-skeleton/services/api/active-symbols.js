@@ -178,7 +178,7 @@ export default class ActiveSymbols {
 
         if (market_options.length === 0) {
             return [
-                ['Derived Indices', 'synthetic_index'],
+                ['Derived', 'synthetic_index'],
                 ['Forex', 'forex'],
                 ['Commodities', 'commodities'],
                 ['Cryptocurrencies', 'cryptocurrency'],
@@ -218,7 +218,7 @@ export default class ActiveSymbols {
 
         if (submarket_options.length === 0) {
             const fallback_submarkets = {
-                synthetic_index: [['Continuous Indices', 'random_index']],
+                synthetic_index: [['Continuous Indices', 'continuous_indices']],
                 forex: [['Major Pairs', 'major_pairs']],
                 commodities: [['Metals', 'metals']],
                 cryptocurrency: [['Cryptocurrency', 'cryptocurrency']],

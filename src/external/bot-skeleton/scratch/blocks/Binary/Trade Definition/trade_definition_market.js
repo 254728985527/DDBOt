@@ -25,7 +25,7 @@ window.Blockly.Blocks.trade_definition_market = {
                     type: 'field_dropdown',
                     name: 'MARKET_LIST',
                     options: [
-                        ['Derived Indices', 'synthetic_index'],
+                        ['Derived', 'synthetic_index'],
                         ['Forex', 'forex'],
                         ['Commodities', 'commodities'],
                         ['Cryptocurrencies', 'cryptocurrency'],
@@ -34,7 +34,7 @@ window.Blockly.Blocks.trade_definition_market = {
                 {
                     type: 'field_dropdown',
                     name: 'SUBMARKET_LIST',
-                    options: [['Continuous Indices', 'random_index']],
+                    options: [['Continuous Indices', 'continuous_indices']],
                 },
                 {
                     type: 'field_dropdown',
