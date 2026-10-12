@@ -10,7 +10,12 @@ import main_xml from './xml/main.xml';
 import { forgetAccumulatorsProposalRequest } from './accumulators-proposal-handler';
 import { loadBlockly } from './blockly';
 import DBotStore from './dbot-store';
+import { getContractTypeOptions } from './shared';
 import { isAllRequiredBlocksEnabled, updateDisabledBlocks, validateErrorOnBlockDelete } from './utils';
+
+const debugLoad = (message, details) => {
+    if (window.__DBOT_DEBUG__) console.debug(`[v0] ${message}`, details ?? '');
+};
 
 const getSavedTradeValues = xml => {
     const document = window.Blockly.utils.xml.textToDom(xml);
@@ -34,16 +39,102 @@ const restoreSavedTradeValues = (workspace, savedValues) => {
     const purchase = workspace.getBlocksByType('purchase', false)[0];
     const set = (block, name) => {
         const value = savedValues[name];
-        if (block && value !== undefined && value !== '' && value !== 'na') block.setFieldValue(value, name);
+        const field = block?.getField(name);
+        const options = field?.menuGenerator_;
+        const is_valid =
+            value !== undefined &&
+            value !== '' &&
+            value !== 'na' &&
+            (!Array.isArray(options) || options.some(([, option_value]) => option_value === value));
+        if (is_valid) {
+            field.setValue(value);
+            debugLoad(`Restored ${name}`, value);
+        } else if (value !== undefined) {
+            debugLoad(`Could not restore ${name}`, { value, options });
+        }
     };
 
-    set(market, 'MARKET_LIST');
-    set(market, 'SUBMARKET_LIST');
-    set(market, 'SYMBOL_LIST');
-    set(tradeType, 'TRADETYPECAT_LIST');
-    set(tradeType, 'TRADETYPE_LIST');
+    ['MARKET_LIST', 'SUBMARKET_LIST', 'SYMBOL_LIST'].forEach(name => set(market, name));
+    ['TRADETYPECAT_LIST', 'TRADETYPE_LIST'].forEach(name => set(tradeType, name));
     set(contract, 'TYPE_LIST');
     set(purchase, 'PURCHASE_LIST');
+};
+
+const populateLoadedTradeOptions = async (workspace, savedValues, event_group) => {
+    const market = workspace.getBlocksByType('trade_definition_market', false)[0];
+    const tradeType = workspace.getBlocksByType('trade_definition_tradetype', false)[0];
+    const contract = workspace.getBlocksByType('trade_definition_contracttype', false)[0];
+    const purchase = workspace.getBlocksByType('purchase', false)[0];
+    const active_symbols = ApiHelpers.instance?.active_symbols;
+    if (!market || !active_symbols?.is_initialised) return;
+
+    const update = (block, name, options, saved_value) => {
+        const valid_options = Array.isArray(options) ? options : [];
+        return block?.getField(name)?.updateOptions(valid_options, {
+            default_value: valid_options.some(([, value]) => value === saved_value)
+                ? saved_value
+                : valid_options[0]?.[1],
+            should_pretend_empty: false,
+            should_trigger_event: false,
+            event_group,
+        });
+    };
+    const market_options = active_symbols.getMarketDropdownOptions();
+    const market_value = savedValues.MARKET_LIST;
+    update(market, 'MARKET_LIST', market_options, market_value);
+    const selected_market = market.getFieldValue('MARKET_LIST');
+    const submarket_options = active_symbols.getSubmarketDropdownOptions(selected_market);
+    update(market, 'SUBMARKET_LIST', submarket_options, savedValues.SUBMARKET_LIST);
+    const selected_submarket = market.getFieldValue('SUBMARKET_LIST');
+    update(market, 'SYMBOL_LIST', active_symbols.getSymbolDropdownOptions(selected_submarket), savedValues.SYMBOL_LIST);
+
+    const contracts_for = ApiHelpers.instance?.contracts_for;
+    const symbol = market.getFieldValue('SYMBOL_LIST');
+    const category_options =
+        (await contracts_for?.getTradeTypeCategories?.(selected_market, selected_submarket, symbol)) ||
+        tradeType.getField('TRADETYPECAT_LIST')?.menuGenerator_ ||
+        [];
+    update(tradeType, 'TRADETYPECAT_LIST', category_options, savedValues.TRADETYPECAT_LIST);
+    const selected_category = tradeType.getFieldValue('TRADETYPECAT_LIST');
+    const type_options =
+        (await contracts_for?.getTradeTypes?.(selected_market, selected_submarket, symbol, selected_category)) ||
+        tradeType.getField('TRADETYPE_LIST')?.menuGenerator_ ||
+        [];
+    update(tradeType, 'TRADETYPE_LIST', type_options, savedValues.TRADETYPE_LIST);
+    const contract_options = getContractTypeOptions('both', tradeType.getFieldValue('TRADETYPE_LIST')) || [];
+    update(
+        contract,
+        'TYPE_LIST',
+        contract_options.length ? contract_options : contract.getField('TYPE_LIST').menuGenerator_,
+        savedValues.TYPE_LIST
+    );
+    const purchase_options =
+        getContractTypeOptions(contract.getFieldValue('TYPE_LIST'), tradeType.getFieldValue('TRADETYPE_LIST')) || [];
+    update(
+        purchase,
+        'PURCHASE_LIST',
+        purchase_options.length ? purchase_options : purchase.getField('PURCHASE_LIST').menuGenerator_,
+        savedValues.PURCHASE_LIST
+    );
+};
+
+const hydrateLoadedTrade = async (workspace, savedValues, event_group) => {
+    const active_symbols = ApiHelpers.instance?.active_symbols;
+    if (!active_symbols) return;
+    try {
+        debugLoad('Requesting active symbols');
+        await active_symbols.retrieveActiveSymbols();
+        debugLoad('Active symbols ready', {
+            markets: active_symbols.getMarketDropdownOptions().length,
+            symbols: active_symbols.getAllSymbols().length,
+        });
+        await populateLoadedTradeOptions(workspace, savedValues, event_group);
+    } catch (error) {
+        debugLoad('Active symbols request failed', error);
+    } finally {
+        workspace.isLoadingStrategy = false;
+        restoreSavedTradeValues(workspace, savedValues);
+    }
 };
 
 class DBot {
@@ -66,7 +157,12 @@ class DBot {
         // eslint-disable-next-line @typescript-eslint/no-this-alias
         var that = this;
         window.Blockly.Blocks.trade_definition_tradetype.onchange = function (event) {
-            if (!this.workspace || window.Blockly.derivWorkspace.isFlyoutVisible || this.workspace.isDragging()) {
+            if (
+                !this.workspace ||
+                this.workspace.isLoadingStrategy ||
+                window.Blockly.derivWorkspace.isFlyoutVisible ||
+                this.workspace.isDragging()
+            ) {
                 return;
             }
 
@@ -211,11 +307,17 @@ class DBot {
                 const event_group = `dbot-load${Date.now()}`;
                 window.Blockly.Events.setGroup(event_group);
                 const saved_trade_values = getSavedTradeValues(window.Blockly.derivWorkspace.strategy_to_load);
+                debugLoad('Captured XML fields', saved_trade_values);
+                this.workspace.isLoadingStrategy = true;
                 window.Blockly.Xml.domToWorkspace(
                     window.Blockly.utils.xml.textToDom(window.Blockly.derivWorkspace.strategy_to_load),
                     this.workspace
                 );
-                window.setTimeout(() => restoreSavedTradeValues(this.workspace, saved_trade_values), 0);
+                debugLoad(
+                    'XML blocks created',
+                    this.workspace.getAllBlocks(false).map(block => block.type)
+                );
+                hydrateLoadedTrade(this.workspace, saved_trade_values, event_group);
                 const { save_modal } = DBotStore.instance;
 
                 save_modal.updateBotName(file_name);

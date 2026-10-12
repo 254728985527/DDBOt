@@ -32,42 +32,12 @@ export default class ActiveSymbols {
             this.active_symbols = api_base?.active_symbols ?? [];
         }
 
+        // An empty response is a real unavailable/offline state. Do not present
+        // a partial hardcoded market list as if it were the current Deriv catalog.
         if (!this.active_symbols.length) {
-            this.active_symbols = [
-                {
-                    market: 'synthetic_index',
-                    market_display_name: 'Derived',
-                    submarket: 'random_index',
-                    submarket_display_name: 'Continuous Indices',
-                    symbol: 'R_100',
-                    display_name: 'Volatility 100 Index',
-                    pip: 2,
-                    exchange_is_open: true,
-                    is_trading_suspended: false,
-                },
-                {
-                    market: 'synthetic_index',
-                    market_display_name: 'Derived',
-                    submarket: 'random_index',
-                    submarket_display_name: 'Continuous Indices',
-                    symbol: 'R_75',
-                    display_name: 'Volatility 75 Index',
-                    pip: 2,
-                    exchange_is_open: true,
-                    is_trading_suspended: false,
-                },
-                {
-                    market: 'synthetic_index',
-                    market_display_name: 'Derived',
-                    submarket: 'random_index',
-                    submarket_display_name: 'Continuous Indices',
-                    symbol: 'R_50',
-                    display_name: 'Volatility 50 Index',
-                    pip: 2,
-                    exchange_is_open: true,
-                    is_trading_suspended: false,
-                },
-            ];
+            this.processed_symbols = {};
+            this.init_promise.resolve();
+            return this.active_symbols;
         }
 
         this.processed_symbols = this.processActiveSymbols();

@@ -41,7 +41,12 @@ window.Blockly.Blocks.purchase = {
         };
     },
     onchange(event) {
-        if (!this.workspace || window.Blockly.derivWorkspace.isFlyoutVisible || this.workspace.isDragging()) {
+        if (
+            !this.workspace ||
+            this.workspace.isLoadingStrategy ||
+            window.Blockly.derivWorkspace.isFlyoutVisible ||
+            this.workspace.isDragging()
+        ) {
             return;
         }
 

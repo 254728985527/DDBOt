@@ -103,6 +103,7 @@ window.Blockly.Blocks.trade_definition_market = {
 
         if (
             !this.workspace ||
+            this.workspace.isLoadingStrategy ||
             window.Blockly.derivWorkspace.isFlyoutVisible ||
             this.workspace.isDragging() ||
             !is_allowed_event
