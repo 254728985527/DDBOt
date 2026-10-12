@@ -12,6 +12,40 @@ import { loadBlockly } from './blockly';
 import DBotStore from './dbot-store';
 import { isAllRequiredBlocksEnabled, updateDisabledBlocks, validateErrorOnBlockDelete } from './utils';
 
+const getSavedTradeValues = xml => {
+    const document = window.Blockly.utils.xml.textToDom(xml);
+    const fields = {};
+    const trade = document.querySelector('block[type="trade_definition_market"]');
+    const tradeType = document.querySelector('block[type="trade_definition_tradetype"]');
+    const contract = document.querySelector('block[type="trade_definition_contracttype"]');
+    const purchase = document.querySelector('block[type="purchase"]');
+    [trade, tradeType, contract, purchase].forEach(block => {
+        block?.querySelectorAll('field').forEach(field => {
+            fields[field.getAttribute('name')] = field.textContent;
+        });
+    });
+    return fields;
+};
+
+const restoreSavedTradeValues = (workspace, savedValues) => {
+    const market = workspace.getBlocksByType('trade_definition_market', false)[0];
+    const tradeType = workspace.getBlocksByType('trade_definition_tradetype', false)[0];
+    const contract = workspace.getBlocksByType('trade_definition_contracttype', false)[0];
+    const purchase = workspace.getBlocksByType('purchase', false)[0];
+    const set = (block, name) => {
+        const value = savedValues[name];
+        if (block && value !== undefined && value !== '' && value !== 'na') block.setFieldValue(value, name);
+    };
+
+    set(market, 'MARKET_LIST');
+    set(market, 'SUBMARKET_LIST');
+    set(market, 'SYMBOL_LIST');
+    set(tradeType, 'TRADETYPECAT_LIST');
+    set(tradeType, 'TRADETYPE_LIST');
+    set(contract, 'TYPE_LIST');
+    set(purchase, 'PURCHASE_LIST');
+};
+
 class DBot {
     constructor() {
         this.interpreter = null;
@@ -176,10 +210,12 @@ class DBot {
 
                 const event_group = `dbot-load${Date.now()}`;
                 window.Blockly.Events.setGroup(event_group);
+                const saved_trade_values = getSavedTradeValues(window.Blockly.derivWorkspace.strategy_to_load);
                 window.Blockly.Xml.domToWorkspace(
                     window.Blockly.utils.xml.textToDom(window.Blockly.derivWorkspace.strategy_to_load),
                     this.workspace
                 );
+                window.setTimeout(() => restoreSavedTradeValues(this.workspace, saved_trade_values), 0);
                 const { save_modal } = DBotStore.instance;
 
                 save_modal.updateBotName(file_name);
