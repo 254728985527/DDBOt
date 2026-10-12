@@ -10,27 +10,31 @@ window.Blockly.BlockSvg.prototype.removeSelect = function () {
 };
 
 window.Blockly.BlockSvg.prototype.addSelect = function () {
-    if (!window.Blockly.derivWorkspace.isFlyoutVisible) {
-        const flyout = DBotStore.instance?.flyout;
+    const workspace = window.Blockly.derivWorkspace;
+    if (!workspace) {
+        console.warn('[v0] Blockly selection ignored: DBotStore workspace is not initialized.');
+        return;
+    }
+
+    const store = DBotStore.instance;
+    if (!store) {
+        console.warn('[v0] Blockly selection ignored: DBotStore is not initialized yet.');
+    }
+
+    if (!workspace.isFlyoutVisible) {
+        const flyout = store?.flyout;
         if (flyout?.setVisibility) {
             flyout.setVisibility(false);
         }
 
         // If there's a lastAddedBlock that's not this block, remove its highlight
-        if (
-            window.Blockly.derivWorkspace.lastAddedBlock &&
-            window.Blockly.derivWorkspace.lastAddedBlock !== this &&
-            window.Blockly.derivWorkspace.lastAddedBlock.svgGroup_
-        ) {
-            window.Blockly.utils.dom.removeClass(
-                window.Blockly.derivWorkspace.lastAddedBlock.svgGroup_,
-                'blocklySelected'
-            );
+        if (workspace.lastAddedBlock && workspace.lastAddedBlock !== this && workspace.lastAddedBlock.svgGroup_) {
+            window.Blockly.utils.dom.removeClass(workspace.lastAddedBlock.svgGroup_, 'blocklySelected');
         }
 
         // Add highlight to this block and update lastAddedBlock
         window.Blockly.utils.dom.addClass(/** @type {!Element} */ (this.svgGroup_), 'blocklySelected');
-        window.Blockly.derivWorkspace.lastAddedBlock = this;
+        workspace.lastAddedBlock = this;
     }
 };
 
