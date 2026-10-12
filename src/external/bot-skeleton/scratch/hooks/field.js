@@ -28,13 +28,16 @@ window.Blockly.FieldDropdown.prototype.updateOptions = function (dropdown_option
         } else if (dropdown_options.length > 0) {
             // Default to first if option isn't available.
             this.setValue(this.menuGenerator_[0][1]);
+        } else if (options.default_value !== undefined && options.default_value !== '') {
+            // Keep the XML value while live metadata is unavailable; restore it when options arrive.
+            this.setValue(options.default_value);
         } else {
             this.setValue(previous_value);
         }
     });
 
-    // If "should_trigger_event" prop is omitted or set to true, fire an event.
-    if (!options.should_trigger_event || options.should_trigger_event === true) {
+    // Silent refreshes must not trigger dependent dropdown updates.
+    if (options.should_trigger_event !== false) {
         const event = new window.Blockly.Events.BlockChange(
             this.sourceBlock_,
             'field',

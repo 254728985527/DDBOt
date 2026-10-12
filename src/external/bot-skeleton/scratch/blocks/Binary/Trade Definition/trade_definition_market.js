@@ -123,7 +123,9 @@ window.Blockly.Blocks.trade_definition_market = {
         const market_options = active_symbols.getMarketDropdownOptions();
         const is_unavailable = options => !options?.length || (options.length === 1 && options[0]?.[1] === 'na');
         if (!active_symbols.is_initialised || is_unavailable(market_options)) {
-            Promise.resolve(active_symbols.retrieveActiveSymbols?.(true)).then(() => {
+            const refresh = Promise.resolve(active_symbols.retrieveActiveSymbols?.(true));
+            const bounded_refresh = Promise.race([refresh, new Promise(resolve => setTimeout(resolve, 5000))]);
+            bounded_refresh.then(() => {
                 if (this.workspace && !this.isDisposed?.()) {
                     const refreshed_markets = active_symbols.getMarketDropdownOptions();
                     const refreshed_market_value =
@@ -131,6 +133,7 @@ window.Blockly.Blocks.trade_definition_market = {
                     market_dropdown.updateOptions(refreshed_markets, {
                         default_value: refreshed_market_value,
                         should_pretend_empty: true,
+                        should_trigger_event: false,
                         event_group: event.group,
                     });
                     const refreshed_market = market_dropdown.getValue() || refreshed_market_value;
@@ -140,6 +143,7 @@ window.Blockly.Blocks.trade_definition_market = {
                     submarket_dropdown.updateOptions(refreshed_submarkets, {
                         default_value: refreshed_submarket_value,
                         should_pretend_empty: true,
+                        should_trigger_event: false,
                         event_group: event.group,
                     });
                     const refreshed_submarket = submarket_dropdown.getValue() || refreshed_submarket_value;
@@ -147,6 +151,7 @@ window.Blockly.Blocks.trade_definition_market = {
                     symbol_dropdown.updateOptions(refreshed_symbols, {
                         default_value: symbol && symbol !== 'na' ? symbol : refreshed_symbols[0]?.[1] || 'R_100',
                         should_pretend_empty: true,
+                        should_trigger_event: false,
                         event_group: event.group,
                     });
                 }
@@ -159,6 +164,7 @@ window.Blockly.Blocks.trade_definition_market = {
             market_dropdown?.updateOptions(market_options, {
                 default_value: selected_market,
                 should_pretend_empty: true,
+                should_trigger_event: false,
                 event_group: event.group,
             });
 
@@ -202,6 +208,7 @@ window.Blockly.Blocks.trade_definition_market = {
                         ? symbol
                         : next_symbol_options[0]?.[1],
                     should_pretend_empty: true,
+                    should_trigger_event: false,
                     event_group: event.group,
                 });
             } else if (changed_field === 'SUBMARKET_LIST') {
