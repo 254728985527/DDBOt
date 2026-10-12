@@ -16,7 +16,11 @@ window.Blockly.Blocks.purchase = {
                 {
                     type: 'field_dropdown',
                     name: 'PURCHASE_LIST',
-                    options: [['', '']],
+                    options: [
+                        ['Purchase', 'purchase'],
+                        ['Call', 'CALL'],
+                        ['Put', 'PUT'],
+                    ],
                 },
             ],
             previousStatement: null,
