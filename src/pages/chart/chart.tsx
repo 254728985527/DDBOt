@@ -16,8 +16,6 @@ type TSubscription = {
 };
 
 const subscriptions: TSubscription = {};
-const publicTickSockets: Record<string, WebSocket> = {};
-const PUBLIC_MARKET_DATA_URL = 'wss://api.derivws.com/trading/v1/options/ws/public';
 const DEFAULT_CHART_SYMBOL = '1HZ100V';
 
 const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) => {
@@ -26,6 +24,7 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
     const { chart_store, run_panel, dashboard } = useStore();
     const [isSafari, setIsSafari] = useState(false);
     const [isChartApiReady, setIsChartApiReady] = useState(false);
+    const [chartConnectionError, setChartConnectionError] = useState<string | null>(null);
 
     const {
         chart_type,
@@ -59,11 +58,12 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
             try {
                 const api = await chart_api.init(true);
                 if (!cancelled && api?.connection?.readyState === WebSocket.OPEN) {
+                    setChartConnectionError(null);
                     setIsChartApiReady(true);
                     return;
                 }
-            } catch {
-                // Retry public market data without surfacing transient socket failures.
+            } catch (error) {
+                if (!cancelled) setChartConnectionError(error instanceof Error ? error.message : 'Unable to connect');
             }
             if (!cancelled) retry_timer = window.setTimeout(connect, 1500);
         };
@@ -90,8 +90,6 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
                 chart_api.api?.forget(subscription_id);
                 delete subscriptions[subscription_id];
             });
-            Object.values(publicTickSockets).forEach(socket => socket.close(1000, 'Chart view closed'));
-            Object.keys(publicTickSockets).forEach(subscription_id => delete publicTickSockets[subscription_id]);
             chart_api.api?.forgetAll('ticks');
         };
     }, []);
@@ -115,41 +113,39 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
         if (!subscription_id) return;
         subscriptions[subscription_id]?.unsubscribe?.();
         delete subscriptions[subscription_id];
-        publicTickSockets[subscription_id]?.close(1000, 'Chart stream replaced');
-        delete publicTickSockets[subscription_id];
         chart_api.api?.forget(subscription_id);
     };
 
     const requestSubscribe = async (req: TicksStreamRequest, callback: (data: any) => void) => {
         if (!req.ticks_history || req.ticks_history === 'undefined' || req.ticks_history === '') return;
+
         requestForgetStream(chartSubscriptionIdRef.current);
-        const subscriptionId = `public-${req.ticks_history}`;
-        const publicSocket = new WebSocket(PUBLIC_MARKET_DATA_URL);
-        publicTickSockets[subscriptionId] = publicSocket;
-        setChartSubscriptionId(subscriptionId);
-        publicSocket.addEventListener('open', () => {
-            publicSocket.send(JSON.stringify({ ...req, subscribe: req.subscribe === 1 ? 1 : 0 }));
-        });
-        publicSocket.addEventListener('message', event => {
-            try {
-                const message = JSON.parse(event.data as string);
-                if (message.error) return;
-                callback(message);
-            } catch {
-                // Ignore non-JSON public gateway frames.
+        const api = chart_api.api?.connection?.readyState === WebSocket.OPEN ? chart_api.api : await chart_api.init();
+        if (!api || api.connection?.readyState !== WebSocket.OPEN) throw new Error('Chart connection is unavailable');
+
+        const subscription = api.subscribe(req);
+        const unsubscribe = subscription.subscribe((response: any) => {
+            if (response?.error) return;
+            const subscriptionId = response?.subscription?.id;
+            if (subscriptionId && !subscriptions[subscriptionId]) {
+                subscriptions[subscriptionId] = { unsubscribe };
+                setChartSubscriptionId(subscriptionId);
             }
+            callback(response);
         });
-        publicSocket.addEventListener('close', () => {
-            if (publicTickSockets[subscriptionId] === publicSocket) delete publicTickSockets[subscriptionId];
-        });
-        publicSocket.addEventListener('error', () => publicSocket.close());
     };
 
     if (!symbol || !isChartApiReady || !chart_api.api) {
         return (
             <div className='dashboard__chart-wrapper chart-loading-state'>
                 <div className='chart-loading-state__spinner' aria-hidden='true' />
-                <span>{isChartApiReady ? 'Retrieving Market Symbols...' : 'Connecting to market data...'}</span>
+                <span>
+                    {chartConnectionError
+                        ? 'Market data temporarily unavailable — reconnecting...'
+                        : isChartApiReady
+                          ? 'Retrieving Market Symbols...'
+                          : 'Connecting to market data...'}
+                </span>
             </div>
         );
     }
