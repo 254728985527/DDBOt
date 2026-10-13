@@ -54,8 +54,11 @@ const restoreSavedTradeValues = (workspace, savedValues) => {
         }
     };
 
-    ['MARKET_LIST', 'SUBMARKET_LIST', 'SYMBOL_LIST'].forEach(name => set(market, name));
-    ['TRADETYPECAT_LIST', 'TRADETYPE_LIST'].forEach(name => set(tradeType, name));
+    set(market, 'MARKET_LIST');
+    set(market, 'SUBMARKET_LIST');
+    set(market, 'SYMBOL_LIST');
+    set(tradeType, 'TRADETYPECAT_LIST');
+    set(tradeType, 'TRADETYPE_LIST');
     set(contract, 'TYPE_LIST');
     set(purchase, 'PURCHASE_LIST');
 };
@@ -206,7 +209,9 @@ class DBot {
                             const category_field = this.getField('TRADETYPECAT_LIST');
                             if (category_field) {
                                 category_field.updateOptions(categories, {
-                                    default_value: category,
+                                    default_value: categories?.some(option => option[1] === category)
+                                        ? category
+                                        : categories?.[0]?.[1],
                                     should_pretend_empty: true,
                                     event_group: event.group,
                                 });
