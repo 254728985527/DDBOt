@@ -56,7 +56,11 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
         let cancelled = false;
         let retry_timer: ReturnType<typeof setTimeout> | undefined;
         let timeout_timer: ReturnType<typeof setTimeout> | undefined;
+        let connecting = false;
+        let attempt = connectionAttempt;
         const connect = async () => {
+            if (cancelled || connecting) return;
+            connecting = true;
             window.clearTimeout(timeout_timer);
             timeout_timer = window.setTimeout(() => {
                 if (!cancelled && chart_api.api?.connection?.readyState !== WebSocket.OPEN) {
@@ -64,18 +68,21 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
                 }
             }, 5000);
             try {
-                const api = await chart_api.init(connectionAttempt > 0);
+                const api = await chart_api.init(attempt > 0);
                 if (!cancelled && api?.connection?.readyState === WebSocket.OPEN) {
                     window.clearTimeout(timeout_timer);
                     setChartConnectionError(null);
                     setIsChartApiReady(true);
+                    connecting = false;
                     return;
                 }
             } catch (error) {
                 if (!cancelled) setChartConnectionError(error instanceof Error ? error.message : 'Unable to connect');
             }
+            connecting = false;
+            attempt += 1;
             if (!cancelled) {
-                const delay = Math.min(1000 * 2 ** Math.min(connectionAttempt, 4), 12000);
+                const delay = Math.min(1000 * 2 ** Math.min(attempt, 4), 12000);
                 retry_timer = window.setTimeout(connect, delay);
             }
         };
