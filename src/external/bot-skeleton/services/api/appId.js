@@ -1,4 +1,4 @@
-import { getAppId } from '@/components/shared';
+import { getAppId, getSocketURL } from '@/components/shared';
 import DerivAPIBasic from '@deriv/deriv-api/dist/DerivAPIBasic';
 import APIMiddleware from './api-middleware';
 
@@ -6,7 +6,17 @@ import APIMiddleware from './api-middleware';
 // documented WebSocket protocol; the /trading/v1/options/ws/public endpoint
 // does not accept active_symbols, ticks_history, or contracts_for requests.
 export const generateDerivApiInstance = () => {
-    const socket_url = `wss://ws.derivws.com/websockets/v3?app_id=${getAppId()}`;
+    const configured_server = getSocketURL();
+    const server_host = configured_server
+        .replace(/^wss?:\/\//, '')
+        .replace(/\/+$/, '')
+        .split('/')[0];
+    const socket_url = `wss://${server_host}/websockets/v3?app_id=${encodeURIComponent(getAppId())}`;
+
+    if (window.location.protocol === 'https:' && !socket_url.startsWith('wss://')) {
+        throw new Error('Market data requires a secure WebSocket endpoint (wss://).');
+    }
+
     const deriv_socket = new WebSocket(socket_url);
     const deriv_api = new DerivAPIBasic({
         connection: deriv_socket,
