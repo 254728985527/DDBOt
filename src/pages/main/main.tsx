@@ -2,6 +2,7 @@ import React, { lazy, Suspense, useEffect, useState } from 'react';
 import classNames from 'classnames';
 import { observer } from 'mobx-react-lite';
 import { useLocation, useNavigate } from 'react-router-dom';
+import ChunkErrorBoundary from '@/components/loader/chunk-error-boundary';
 import ChunkLoader from '@/components/loader/chunk-loader';
 import { generateOAuthURL } from '@/components/shared';
 import DesktopWrapper from '@/components/shared_ui/desktop-wrapper';
@@ -322,11 +323,19 @@ const AppWrapper = observer(() => {
                                         : 'id-charts'
                                 }
                             >
-                                <Suspense
-                                    fallback={<ChunkLoader message={localize('Please wait, loading chart...')} />}
+                                <ChunkErrorBoundary
+                                    fallback={
+                                        <ChunkLoader
+                                            message={localize('Unable to load the chart. Refreshing the app...')}
+                                        />
+                                    }
                                 >
-                                    <ChartWrapper show_digits_stats={false} />
-                                </Suspense>
+                                    <Suspense
+                                        fallback={<ChunkLoader message={localize('Please wait, loading chart...')} />}
+                                    >
+                                        <ChartWrapper show_digits_stats={false} />
+                                    </Suspense>
+                                </ChunkErrorBoundary>
                             </div>
                             <div
                                 label={
@@ -343,13 +352,21 @@ const AppWrapper = observer(() => {
                                 id='id-tutorials'
                             >
                                 <div className='tutorials-wrapper'>
-                                    <Suspense
+                                    <ChunkErrorBoundary
                                         fallback={
-                                            <ChunkLoader message={localize('Please wait, loading tutorials...')} />
+                                            <ChunkLoader
+                                                message={localize('Unable to load tutorials. Refreshing the app...')}
+                                            />
                                         }
                                     >
-                                        <Tutorial handleTabChange={handleTabChange} />
-                                    </Suspense>
+                                        <Suspense
+                                            fallback={
+                                                <ChunkLoader message={localize('Please wait, loading tutorials...')} />
+                                            }
+                                        >
+                                            <Tutorial handleTabChange={handleTabChange} />
+                                        </Suspense>
+                                    </ChunkErrorBoundary>
                                 </div>
                             </div>
                             <div
