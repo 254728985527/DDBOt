@@ -25,6 +25,7 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
     const [isSafari, setIsSafari] = useState(false);
     const [isChartApiReady, setIsChartApiReady] = useState(false);
     const [chartConnectionError, setChartConnectionError] = useState<string | null>(null);
+    const [connectionAttempt, setConnectionAttempt] = useState(0);
 
     const {
         chart_type,
@@ -54,10 +55,18 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
     useEffect(() => {
         let cancelled = false;
         let retry_timer: ReturnType<typeof setTimeout> | undefined;
+        let timeout_timer: ReturnType<typeof setTimeout> | undefined;
         const connect = async () => {
+            window.clearTimeout(timeout_timer);
+            timeout_timer = window.setTimeout(() => {
+                if (!cancelled && chart_api.api?.connection?.readyState !== WebSocket.OPEN) {
+                    setChartConnectionError('Market data connection timed out');
+                }
+            }, 5000);
             try {
-                const api = await chart_api.init(true);
+                const api = await chart_api.init(connectionAttempt > 0);
                 if (!cancelled && api?.connection?.readyState === WebSocket.OPEN) {
+                    window.clearTimeout(timeout_timer);
                     setChartConnectionError(null);
                     setIsChartApiReady(true);
                     return;
@@ -65,15 +74,19 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
             } catch (error) {
                 if (!cancelled) setChartConnectionError(error instanceof Error ? error.message : 'Unable to connect');
             }
-            if (!cancelled) retry_timer = window.setTimeout(connect, 1500);
+            if (!cancelled) {
+                const delay = Math.min(1000 * 2 ** Math.min(connectionAttempt, 4), 12000);
+                retry_timer = window.setTimeout(connect, delay);
+            }
         };
         connect();
 
         return () => {
             cancelled = true;
-            if (retry_timer) window.clearTimeout(retry_timer);
+            window.clearTimeout(retry_timer);
+            window.clearTimeout(timeout_timer);
         };
-    }, []);
+    }, [connectionAttempt]);
 
     useEffect(() => {
         // Safari browser detection
@@ -141,11 +154,25 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
                 <div className='chart-loading-state__spinner' aria-hidden='true' />
                 <span>
                     {chartConnectionError
-                        ? 'Market data temporarily unavailable — reconnecting...'
+                        ? 'Failed to connect to market data. Check your network, sign in with a token that has Read permission, or retry.'
                         : isChartApiReady
                           ? 'Retrieving Market Symbols...'
                           : 'Connecting to market data...'}
                 </span>
+                {chartConnectionError && (
+                    <button
+                        type='button'
+                        className='chart-loading-state__retry'
+                        onClick={() => {
+                            chart_api.disconnect();
+                            setIsChartApiReady(false);
+                            setChartConnectionError(null);
+                            setConnectionAttempt(attempt => attempt + 1);
+                        }}
+                    >
+                        Retry
+                    </button>
+                )}
             </div>
         );
     }

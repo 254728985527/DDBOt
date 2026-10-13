@@ -188,6 +188,22 @@
     animation: chart-loading-spin 0.8s linear infinite;
 }
 
+.chart-loading-state__retry {
+    border: 0.1rem solid var(--brand-red-coral);
+    border-radius: 0.4rem;
+    background: transparent;
+    color: var(--brand-red-coral);
+    cursor: pointer;
+    font: inherit;
+    padding: 0.5rem 1.2rem;
+}
+
+.chart-loading-state__retry:hover,
+.chart-loading-state__retry:focus-visible {
+    background: var(--brand-red-coral);
+    color: var(--text-colored-background);
+}
+
 @keyframes chart-loading-spin {
     to {
         transform: rotate(360deg);
