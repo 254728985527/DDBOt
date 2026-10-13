@@ -73,7 +73,10 @@ export default class ChartStore {
 
         const block_symbol = market_block?.getFieldValue('SYMBOL_LIST');
         const active_symbol = api_base?.active_symbols?.find(item => item?.symbol)?.symbol;
-        this.symbol = block_symbol && block_symbol !== 'undefined' ? block_symbol : active_symbol;
+        const next_symbol = block_symbol && block_symbol !== 'undefined' ? block_symbol : active_symbol;
+
+        // Keep the chart's restored/default symbol when the bot API has not loaded symbols yet.
+        if (next_symbol) this.symbol = next_symbol;
     };
 
     onSymbolChange = (symbol: string) => {

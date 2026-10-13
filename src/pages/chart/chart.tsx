@@ -3,13 +3,7 @@ import classNames from 'classnames';
 import { observer } from 'mobx-react-lite';
 import chart_api from '@/external/bot-skeleton/services/api/chart-api';
 import { useStore } from '@/hooks/useStore';
-import {
-    ActiveSymbolsRequest,
-    ServerTimeRequest,
-    TicksHistoryResponse,
-    TicksStreamRequest,
-    TradingTimesRequest,
-} from '@deriv/api-types';
+import { ActiveSymbolsRequest, ServerTimeRequest, TicksStreamRequest, TradingTimesRequest } from '@deriv/api-types';
 import { ChartTitle, SmartChart } from '@deriv/deriv-charts';
 import { useDevice } from '@deriv-com/ui';
 import ToolbarWidgets from './toolbar-widgets';
@@ -18,13 +12,6 @@ import '@deriv/deriv-charts/dist/smartcharts.css';
 type TSubscription = {
     [key: string]: null | {
         unsubscribe?: () => void;
-    };
-};
-
-type TError = null | {
-    error?: {
-        code?: string;
-        message?: string;
     };
 };
 
@@ -115,10 +102,8 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
 
     useEffect(() => {
         if (!isChartApiReady) return;
-        if (!chart_store.symbol) {
-            chart_store.symbol = DEFAULT_CHART_SYMBOL;
-        }
-        if (chart_store.symbol) updateSymbol();
+        if (!chart_store.symbol) chart_store.symbol = DEFAULT_CHART_SYMBOL;
+        updateSymbol();
     }, [chart_store, isChartApiReady, updateSymbol]);
 
     const requestAPI = async (req: ServerTimeRequest | ActiveSymbolsRequest | TradingTimesRequest) => {
