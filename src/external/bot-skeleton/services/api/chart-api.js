@@ -1,7 +1,7 @@
 import { generateDerivApiInstance } from './appId';
 
-const OPEN_TIMEOUT_MS = 5000;
-const MAX_RECONNECT_DELAY_MS = 12000;
+const OPEN_TIMEOUT_MS = Number(import.meta.env?.VITE_MARKET_DATA_TIMEOUT_MS) || 15000;
+const MAX_RECONNECT_DELAY_MS = 30000;
 
 class ChartAPI {
     api;
@@ -49,7 +49,7 @@ class ChartAPI {
                 const onerror = () => finish(new Error('Market data connection was blocked or failed'));
                 const onclose = () => finish(new Error('Market data connection closed before opening'));
                 timer = window.setTimeout(
-                    () => finish(new Error('Market data connection timed out after 5 seconds')),
+                    () => finish(new Error(`Market data connection timed out after ${OPEN_TIMEOUT_MS / 1000} seconds`)),
                     OPEN_TIMEOUT_MS
                 );
                 connection.addEventListener('open', onopen, { once: true });

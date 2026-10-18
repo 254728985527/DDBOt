@@ -58,6 +58,7 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
         let timeout_timer: ReturnType<typeof setTimeout> | undefined;
         let connecting = false;
         let attempt = connectionAttempt;
+        const max_attempts = 3;
         const connect = async () => {
             if (cancelled || connecting) return;
             connecting = true;
@@ -81,7 +82,7 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
             }
             connecting = false;
             attempt += 1;
-            if (!cancelled) {
+            if (!cancelled && attempt <= max_attempts) {
                 const delay = Math.min(1000 * 2 ** Math.min(attempt, 4), 12000);
                 retry_timer = window.setTimeout(connect, delay);
             }
