@@ -20,6 +20,20 @@ const BOTZ_STRATEGIES: BotzStrategy[] = [
         accent: 'violet',
     },
     {
+        name: 'Entry Best',
+        description: 'Target-digit entry strategy with manual comparison logic.',
+        category: 'Entry',
+        file: 'entry-best.xml',
+        accent: 'purple',
+    },
+    {
+        name: 'Multi Hedging Tool',
+        description: 'Multi-run digit strategy with recovery and hedging controls.',
+        category: 'Hedging',
+        file: 'multi-hedging-tool.xml',
+        accent: 'slate',
+    },
+    {
         name: 'Cash Printer Original',
         description: 'A compact digit-over strategy with stake recovery.',
         category: 'Digits',
