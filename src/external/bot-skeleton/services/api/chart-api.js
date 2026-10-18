@@ -12,8 +12,8 @@ class ChartAPI {
     connection_generation = 0;
 
     onsocketclose = () => {
+        // The chart view owns retries. Avoid a second reconnect loop racing its lifecycle.
         this.connection_error = new Error('Market data WebSocket closed');
-        this.reconnectIfNotConnected();
     };
 
     getConnectionError = () => this.connection_error;

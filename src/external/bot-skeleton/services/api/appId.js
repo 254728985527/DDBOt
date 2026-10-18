@@ -7,10 +7,19 @@ import APIMiddleware from './api-middleware';
 // does not accept active_symbols, ticks_history, or contracts_for requests.
 export const generateDerivApiInstance = () => {
     const configured_server = getSocketURL();
-    const server_host = configured_server
+    const configured_host = configured_server
         .replace(/^wss?:\/\//, '')
         .replace(/\/+$/, '')
-        .split('/')[0];
+        .split('/')[0]
+        .toLowerCase();
+    const allowed_hosts = new Set([
+        'ws.derivws.com',
+        'green.derivws.com',
+        'blue.derivws.com',
+        'red.derivws.com',
+        'canary.derivws.com',
+    ]);
+    const server_host = allowed_hosts.has(configured_host) ? configured_host : 'ws.derivws.com';
     const socket_url = `wss://${server_host}/websockets/v3?app_id=${encodeURIComponent(getAppId())}`;
 
     if (window.location.protocol === 'https:' && !socket_url.startsWith('wss://')) {
