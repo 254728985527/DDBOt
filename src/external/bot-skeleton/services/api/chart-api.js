@@ -36,14 +36,15 @@ class ChartAPI {
         if (this.api?.connection?.readyState === WebSocket.CONNECTING) {
             const connection = this.api.connection;
             const generation = this.connection_generation;
-            await new Promise((resolve, reject) => {
+            await new Promise(resolve => {
                 let timer;
                 const finish = error => {
                     window.clearTimeout(timer);
                     connection.removeEventListener('open', onopen);
                     connection.removeEventListener('error', onerror);
                     connection.removeEventListener('close', onclose);
-                    error ? reject(error) : resolve();
+                    if (error) this.connection_error = error;
+                    resolve();
                 };
                 const onopen = () => finish();
                 const onerror = () => finish(new Error('Market data connection was blocked or failed'));
@@ -56,16 +57,14 @@ class ChartAPI {
                 connection.addEventListener('error', onerror, { once: true });
                 connection.addEventListener('close', onclose, { once: true });
             });
-            if (generation !== this.connection_generation) throw new Error('Market data connection was reset');
+            if (generation !== this.connection_generation) return null;
         }
         if (this.api?.connection?.readyState === WebSocket.OPEN) {
             this.reconnect_attempt = 0;
             this.connection_error = null;
             this.getTime();
-        } else {
-            throw new Error('Market data connection is unavailable');
         }
-        return this.api;
+        return this.api?.connection?.readyState === WebSocket.OPEN ? this.api : null;
     };
 
     getTime() {
