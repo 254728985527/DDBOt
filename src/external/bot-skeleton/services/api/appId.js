@@ -1,4 +1,4 @@
-import { getAppId, getSocketURL } from '@/components/shared';
+import { getAppId } from '@/components/shared';
 import DerivAPIBasic from '@deriv/deriv-api/dist/DerivAPIBasic';
 import APIMiddleware from './api-middleware';
 
@@ -6,21 +6,11 @@ import APIMiddleware from './api-middleware';
 // documented WebSocket protocol; the /trading/v1/options/ws/public endpoint
 // does not accept active_symbols, ticks_history, or contracts_for requests.
 export const generateDerivApiInstance = () => {
-    const configured_server = getSocketURL();
-    const configured_host = configured_server
-        .replace(/^wss?:\/\//, '')
-        .replace(/\/+$/, '')
-        .split('/')[0]
-        .toLowerCase();
-    const allowed_hosts = new Set([
-        'ws.derivws.com',
-        'green.derivws.com',
-        'blue.derivws.com',
-        'red.derivws.com',
-        'canary.derivws.com',
-    ]);
-    const server_host = allowed_hosts.has(configured_host) ? configured_host : 'ws.derivws.com';
-    const socket_url = `wss://${server_host}/websockets/v3?app_id=${encodeURIComponent(getAppId())}`;
+    // Use Deriv's canonical API host. Preview/local endpoint overrides can point
+    // at HTTP hosts or retired QA sockets that reject the legacy API protocol.
+    const raw_app_id = String(getAppId() ?? '').trim();
+    const app_id = /^\d+$/.test(raw_app_id) ? raw_app_id : '65555';
+    const socket_url = `wss://ws.derivws.com/websockets/v3?app_id=${encodeURIComponent(app_id)}`;
 
     if (window.location.protocol === 'https:' && !socket_url.startsWith('wss://')) {
         throw new Error('Market data requires a secure WebSocket endpoint (wss://).');
