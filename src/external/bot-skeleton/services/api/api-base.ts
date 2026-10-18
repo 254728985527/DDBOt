@@ -78,8 +78,10 @@ class APIBase {
     }
 
     onsocketclose() {
+        // Do not reconnect from the global API layer. Chart and bot-builder views
+        // own their lifecycle and an automatic global retry loop can create
+        // competing sockets while a browser/network block is still active.
         setConnectionStatus(CONNECTION_STATUS.CLOSED);
-        this.reconnectIfNotConnected();
     }
 
     async init(force_create_connection = false) {
@@ -165,13 +167,10 @@ class APIBase {
     }
 
     reconnectIfNotConnected = () => {
-        // eslint-disable-next-line no-console
-        console.log('connection state: ', this.api?.connection?.readyState);
-        if (this.api?.connection?.readyState && this.api?.connection?.readyState > 1) {
-            // eslint-disable-next-line no-console
-            console.log('Info: Connection to the server was closed, trying to reconnect.');
-            this.init(true);
-        }
+        if (this.api?.connection?.readyState === WebSocket.OPEN) return;
+        void this.init(true).catch(() => {
+            setConnectionStatus(CONNECTION_STATUS.CLOSED);
+        });
     };
 
     async authorizeAndSubscribe() {

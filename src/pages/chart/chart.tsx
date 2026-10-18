@@ -67,7 +67,7 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
                 if (!cancelled && chart_api.api?.connection?.readyState !== WebSocket.OPEN) {
                     setChartConnectionError('Market data connection timed out');
                 }
-            }, 5000);
+            }, 15000);
             try {
                 const api = await chart_api.init(attempt > 0);
                 if (!cancelled && api?.connection?.readyState === WebSocket.OPEN) {
