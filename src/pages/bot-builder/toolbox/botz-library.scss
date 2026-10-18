@@ -59,6 +59,7 @@
 .botz-library__toolbar {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 0.75rem;
     max-width: 74rem;
     margin: 0 auto 1.25rem;
@@ -110,15 +111,59 @@
     font-size: 0.8rem;
 }
 
+.botz-library__zoom {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-left: auto;
+}
+
+.botz-library__zoom button,
+.botz-library__zoom output {
+    min-width: 2rem;
+    border: 1px solid #cbdce5;
+    border-radius: 0.45rem;
+    padding: 0.42rem 0.55rem;
+    background: #f8fbfd;
+    color: #17415a;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-align: center;
+}
+
+.botz-library__zoom button {
+    cursor: pointer;
+}
+
+.botz-library__zoom button:hover,
+.botz-library__zoom button:focus-visible {
+    border-color: #0e7490;
+    background: #e7f6fa;
+}
+
+.botz-library__canvas {
+    max-width: 74rem;
+    height: min(31rem, calc(100vh - 15rem));
+    min-height: 14rem;
+    margin: 0 auto;
+    overflow: auto;
+    overscroll-behavior: contain;
+    border: 1px solid #d6e3eb;
+    border-radius: 0.6rem;
+    background: #f8fbfd;
+    scrollbar-gutter: stable both-edges;
+    touch-action: pan-x pan-y;
+}
+
 .botz-library__grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(22rem, 1fr));
     gap: 0.7rem;
-    max-width: 74rem;
-    max-height: 31rem;
-    overflow-y: auto;
-    margin: 0 auto;
+    min-width: 48rem;
+    width: max(100%, 48rem);
     padding: 0.45rem;
+    transform-origin: top left;
+    background-size: 1.25rem 1.25rem;
     background-color: #f8fbfd;
     background-image:
         linear-gradient(#e5f0f5 1px, transparent 1px), linear-gradient(90deg, #e5f0f5 1px, transparent 1px);

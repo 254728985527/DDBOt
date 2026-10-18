@@ -70,6 +70,18 @@ const BotzLibrary = ({ onClose = () => undefined, embedded = false }: BotzLibrar
     const [query, setQuery] = React.useState('');
     const [loading_file, setLoadingFile] = React.useState<string | null>(null);
     const [message, setMessage] = React.useState('');
+    const [canvas_scale, setCanvasScale] = React.useState(1);
+
+    const adjustCanvasScale = (delta: number) => {
+        setCanvasScale(current => Math.min(1.5, Math.max(0.65, Number((current + delta).toFixed(2)))));
+    };
+
+    const handleCanvasWheel = (event: React.WheelEvent<HTMLDivElement>) => {
+        if (event.ctrlKey || event.metaKey) {
+            event.preventDefault();
+            adjustCanvasScale(event.deltaY < 0 ? 0.05 : -0.05);
+        }
+    };
 
     const sanitizeXmlForWorkspace = (xml_text: string) => {
         const xml_dom = new DOMParser().parseFromString(xml_text, 'application/xml');
@@ -174,28 +186,46 @@ const BotzLibrary = ({ onClose = () => undefined, embedded = false }: BotzLibrar
                     aria-label='Search Botz strategies'
                 />
                 <span>{filtered_strategies.length} strategies</span>
+                <div className='botz-library__zoom' aria-label='Botz canvas zoom controls'>
+                    <button type='button' onClick={() => adjustCanvasScale(-0.1)} aria-label='Zoom out'>
+                        −
+                    </button>
+                    <output>{Math.round(canvas_scale * 100)}%</output>
+                    <button type='button' onClick={() => adjustCanvasScale(0.1)} aria-label='Zoom in'>
+                        +
+                    </button>
+                    <button type='button' onClick={() => setCanvasScale(1)} aria-label='Reset zoom'>
+                        Reset
+                    </button>
+                </div>
             </div>
             {message && (
                 <div className='botz-library__message' role='alert'>
                     {message}
                 </div>
             )}
-            <div className='botz-library__grid'>
-                {filtered_strategies.map(strategy => (
-                    <article className={`botz-card botz-card--${strategy.accent}`} key={strategy.file}>
-                        <div className='botz-card__topline'>
-                            <span>{strategy.category}</span>
-                            <span className='botz-card__dot' />
-                        </div>
-                        <div className='botz-card__content'>
-                            <h3>{strategy.name}</h3>
-                            <p>{strategy.description}</p>
-                        </div>
-                        <button type='button' onClick={() => loadBot(strategy)} disabled={loading_file !== null}>
-                            {loading_file === strategy.file ? 'Loading…' : 'Open in Builder'}
-                        </button>
-                    </article>
-                ))}
+            <div
+                className='botz-library__canvas'
+                onWheel={handleCanvasWheel}
+                aria-label='Scrollable Botz strategy canvas'
+            >
+                <div className='botz-library__grid' style={{ transform: `scale(${canvas_scale})` }}>
+                    {filtered_strategies.map(strategy => (
+                        <article className={`botz-card botz-card--${strategy.accent}`} key={strategy.file}>
+                            <div className='botz-card__topline'>
+                                <span>{strategy.category}</span>
+                                <span className='botz-card__dot' />
+                            </div>
+                            <div className='botz-card__content'>
+                                <h3>{strategy.name}</h3>
+                                <p>{strategy.description}</p>
+                            </div>
+                            <button type='button' onClick={() => loadBot(strategy)} disabled={loading_file !== null}>
+                                {loading_file === strategy.file ? 'Loading…' : 'Open in Builder'}
+                            </button>
+                        </article>
+                    ))}
+                </div>
             </div>
         </div>
     );
