@@ -163,7 +163,6 @@
     width: max(100%, 48rem);
     padding: 0.45rem;
     transform-origin: top left;
-    background-size: 1.25rem 1.25rem;
     background-color: #f8fbfd;
     background-image:
         linear-gradient(#e5f0f5 1px, transparent 1px), linear-gradient(90deg, #e5f0f5 1px, transparent 1px);
@@ -179,7 +178,7 @@
     align-items: center;
     gap: 0.7rem;
     min-height: 4.8rem;
-    border: 1px solid #d7e3ea;
+    border: 2px solid #ff6900;
     border-radius: 0.7rem;
     padding: 0.7rem 0.75rem;
     background: #fff;
@@ -204,32 +203,17 @@
     display: none;
 }
 
-.botz-card--violet {
-    border-top-color: #7c3aed;
-}
-
-.botz-card--cyan {
-    border-top-color: #0891b2;
-}
-
-.botz-card--amber {
-    border-top-color: #d97706;
-}
-
-.botz-card--emerald {
-    border-top-color: #059669;
-}
-
-.botz-card--blue {
-    border-top-color: #2563eb;
-}
-
-.botz-card--rose {
-    border-top-color: #e11d48;
-}
-
-.botz-card--indigo {
-    border-top-color: #4f46e5;
+.botz-card--violet,
+.botz-card--purple,
+.botz-card--slate,
+.botz-card--cyan,
+.botz-card--amber,
+.botz-card--emerald,
+.botz-card--blue,
+.botz-card--rose,
+.botz-card--indigo,
+.botz-card--teal {
+    border-color: #ff6900;
 }
 
 .botz-card__content {
