@@ -1,4 +1,6 @@
 .botz-library {
+    --botz-border-orange: #ff6900;
+
     position: absolute;
     inset: 0 0 0 15.6rem;
     z-index: 20;
@@ -178,7 +180,7 @@
     align-items: center;
     gap: 0.7rem;
     min-height: 4.8rem;
-    border: 2px solid #ff6900;
+    border: 2px solid var(--botz-border-orange);
     border-radius: 0.7rem;
     padding: 0.7rem 0.75rem;
     background: #fff;
@@ -213,7 +215,7 @@
 .botz-card--rose,
 .botz-card--indigo,
 .botz-card--teal {
-    border-color: #ff6900;
+    border-color: var(--botz-border-orange);
 }
 
 .botz-card__content {
