@@ -26,7 +26,9 @@ const getSavedTradeValues = xml => {
     const purchase = document.querySelector('block[type="purchase"]');
     [trade, tradeType, contract, purchase].forEach(block => {
         block?.querySelectorAll('field').forEach(field => {
-            fields[field.getAttribute('name')] = field.textContent;
+            const name = field.getAttribute('name');
+            const value = field.textContent?.trim();
+            if (name && value !== undefined) fields[name] = value;
         });
     });
     return fields;
@@ -151,6 +153,9 @@ const hydrateLoadedTrade = async (workspace, savedValues, event_group) => {
     } finally {
         workspace.isLoadingStrategy = false;
         restoreSavedTradeValues(workspace, savedValues);
+        // Dynamic dropdowns can finish rendering after their options are hydrated.
+        // Reapply saved values on the next paint so loaded files display their parameters.
+        requestAnimationFrame(() => restoreSavedTradeValues(workspace, savedValues));
     }
 };
 
