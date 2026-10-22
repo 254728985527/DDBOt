@@ -283,8 +283,7 @@ class APIBase {
         await doUntilDone(
             () =>
                 this.api?.send({
-                    active_symbols: 'brief',
-                    product_type: 'basic',
+                    active_symbols: 'full',
                     req_id: 1,
                 }),
             [],

@@ -20,49 +20,38 @@ const debugLoad = (message, details) => {
 const getSavedTradeValues = xml => {
     const document = window.Blockly.utils.xml.textToDom(xml);
     const fields = {};
-    const trade = document.querySelector('block[type="trade_definition_market"]');
-    const tradeType = document.querySelector('block[type="trade_definition_tradetype"]');
-    const contract = document.querySelector('block[type="trade_definition_contracttype"]');
-    const purchase = document.querySelector('block[type="purchase"]');
-    [trade, tradeType, contract, purchase].forEach(block => {
-        block?.querySelectorAll('field').forEach(field => {
-            const name = field.getAttribute('name');
-            const value = field.textContent?.trim();
-            if (name && value !== undefined) fields[name] = value;
-        });
+    document.querySelectorAll('block field').forEach(field => {
+        const name = field.getAttribute('name');
+        const value = field.textContent?.trim();
+        if (name && value !== undefined) fields[name] = value;
     });
+    debugLoad('Parsed XML field values', fields);
     return fields;
 };
 
 const restoreSavedTradeValues = (workspace, savedValues) => {
-    const market = workspace.getBlocksByType('trade_definition_market', false)[0];
-    const tradeType = workspace.getBlocksByType('trade_definition_tradetype', false)[0];
-    const contract = workspace.getBlocksByType('trade_definition_contracttype', false)[0];
-    const purchase = workspace.getBlocksByType('purchase', false)[0];
-    const set = (block, name) => {
-        const value = savedValues[name];
-        const field = block?.getField(name);
-        const options = field?.menuGenerator_;
-        const is_valid =
-            value !== undefined &&
-            value !== '' &&
-            value !== 'na' &&
-            (!Array.isArray(options) || options.some(([, option_value]) => option_value === value));
-        if (is_valid) {
-            field.setValue(value);
-            debugLoad(`Restored ${name}`, value);
-        } else if (value !== undefined) {
-            debugLoad(`Could not restore ${name}`, { value, options });
-        }
-    };
+    workspace.getAllBlocks(false).forEach(block => {
+        block.inputList?.forEach(input => {
+            input.fieldRow?.forEach(field => {
+                const name = field.name;
+                const value = savedValues[name];
+                if (!name || value === undefined || value === '' || value === 'na') return;
 
-    set(market, 'MARKET_LIST');
-    set(market, 'SUBMARKET_LIST');
-    set(market, 'SYMBOL_LIST');
-    set(tradeType, 'TRADETYPECAT_LIST');
-    set(tradeType, 'TRADETYPE_LIST');
-    set(contract, 'TYPE_LIST');
-    set(purchase, 'PURCHASE_LIST');
+                const options = typeof field.getOptions === 'function' ? field.getOptions() : field.menuGenerator_;
+                const resolved_options = Array.isArray(options) ? options : [];
+                const is_valid = resolved_options.some(([, option_value]) => option_value === value);
+                if (is_valid) {
+                    if (field.getValue() !== value) field.setValue(value);
+                    debugLoad(`Restored ${block.type}.${name}`, value);
+                } else {
+                    debugLoad(`Could not restore ${block.type}.${name}`, {
+                        value,
+                        available_values: resolved_options.map(([, option_value]) => option_value),
+                    });
+                }
+            });
+        });
+    });
 };
 
 const populateLoadedTradeOptions = async (workspace, savedValues, event_group) => {
@@ -95,30 +84,12 @@ const populateLoadedTradeOptions = async (workspace, savedValues, event_group) =
 
     const contracts_for = ApiHelpers.instance?.contracts_for;
     const symbol = market.getFieldValue('SYMBOL_LIST');
-    const category_options = (await contracts_for?.getTradeTypeCategories?.(
-        selected_market,
-        selected_submarket,
-        symbol
-    )) || [
-        ['Up/Down', 'callput'],
-        ['Digits', 'digits'],
-    ];
+    const category_options =
+        (await contracts_for?.getTradeTypeCategories?.(selected_market, selected_submarket, symbol)) || [];
     update(tradeType, 'TRADETYPECAT_LIST', category_options, savedValues.TRADETYPECAT_LIST);
     const selected_category = tradeType.getFieldValue('TRADETYPECAT_LIST');
-    const fallback_types = {
-        callput: [
-            ['Rise/Fall', 'callput'],
-            ['Higher/Lower', 'higherlower'],
-        ],
-        digits: [
-            ['Over/Under', 'overunder'],
-            ['Even/Odd', 'evenodd'],
-        ],
-    };
     const type_options =
-        (await contracts_for?.getTradeTypes?.(selected_market, selected_submarket, symbol, selected_category)) ||
-        fallback_types[selected_category] ||
-        fallback_types.callput;
+        (await contracts_for?.getTradeTypes?.(selected_market, selected_submarket, symbol, selected_category)) || [];
     update(tradeType, 'TRADETYPE_LIST', type_options, savedValues.TRADETYPE_LIST);
     const contract_options = getContractTypeOptions('both', tradeType.getFieldValue('TRADETYPE_LIST')) || [];
     update(
@@ -148,6 +119,11 @@ const hydrateLoadedTrade = async (workspace, savedValues, event_group) => {
             symbols: active_symbols.getAllSymbols().length,
         });
         await populateLoadedTradeOptions(workspace, savedValues, event_group);
+        debugLoad('Dropdown population complete', {
+            market: workspace.getBlocksByType('trade_definition_market', false)[0]?.getFieldValue('MARKET_LIST'),
+            submarket: workspace.getBlocksByType('trade_definition_market', false)[0]?.getFieldValue('SUBMARKET_LIST'),
+            symbol: workspace.getBlocksByType('trade_definition_market', false)[0]?.getFieldValue('SYMBOL_LIST'),
+        });
     } catch (error) {
         debugLoad('Active symbols request failed', error);
     } finally {
