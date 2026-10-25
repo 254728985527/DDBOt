@@ -110,8 +110,10 @@ const QuickStrategyForm = observer(() => {
             if (!group?.length) return null;
             return (
                 <div className='qs__body__content__form__group' key={group_index}>
-                    {group.map((field, field_index) => {
-                        const key = `${field.name || field.type} + ${field_index}`;
+                    {group.map(field => {
+                        // Keep each control identity stable when conditional fields appear or disappear.
+                        // Index-based keys make React reuse a neighboring input and visually jumble values.
+                        const key = `${field.type}-${field.name || field.label || 'field'}-${group_index}`;
 
                         if (
                             (!isDesktop && field.hide?.includes('mobile')) ||
