@@ -4,7 +4,6 @@ import { ToastContainer } from 'react-toastify';
 import AuthLoadingWrapper from '@/components/auth-loading-wrapper';
 import useLiveChat from '@/components/chat/useLiveChat';
 import { BOT_RESTRICTED_COUNTRIES_LIST } from '@/components/layout/header/utils';
-import ChunkLoader from '@/components/loader/chunk-loader';
 import PWAInstallModal from '@/components/pwa-install-modal';
 import { getUrlBase } from '@/components/shared';
 import TncStatusUpdateModal from '@/components/tnc-status-update-modal';
@@ -22,7 +21,6 @@ import initDatadog from '@/utils/datadog';
 import initHotjar from '@/utils/hotjar';
 import { setSmartChartsPublicPath } from '@deriv/deriv-charts';
 import { ThemeProvider } from '@deriv-com/quill-ui';
-import { localize } from '@deriv-com/translations';
 import Audio from '../components/audio';
 import BlocklyLoading from '../components/blockly-loading';
 import BotStopped from '../components/bot-stopped';
@@ -35,7 +33,7 @@ import '../components/bot-notification/bot-notification.scss';
 const AppContent = observer(() => {
     const [is_api_initialized, setIsApiInitialized] = React.useState(false);
     const [is_loading, setIsLoading] = React.useState(true);
-    const [is_eu_error_loading, setIsEuErrorLoading] = React.useState(true);
+    const [, setIsEuErrorLoading] = React.useState(true);
     const [offline_timeout, setOfflineTimeout] = React.useState(null);
     const store = useStore();
     const { app, transactions, common, client } = store;
@@ -271,12 +269,13 @@ const AppContent = observer(() => {
 
     if (common?.error) return null;
 
-    // Show loading message based on online/offline state
-    const getLoadingMessage = () => {
-        if (is_eu_error_loading) return '';
-        if (!isOnline) return localize('Loading offline dashboard...');
-        return localize('Initializing Deriv Bot account...');
-    };
+    // Never keep the main navigation behind account metadata or active-symbol loading.
+    // Those services continue in the background so Dashboard, Bot Builder, and Charts open immediately.
+    React.useEffect(() => {
+        if (!is_loading) return;
+        const timeoutId = window.setTimeout(() => setIsLoading(false), 1500);
+        return () => window.clearTimeout(timeoutId);
+    }, [is_loading]);
 
     // Skip loading entirely when offline - show dashboard directly
     if (!isOnline) {
@@ -301,9 +300,7 @@ const AppContent = observer(() => {
         );
     }
 
-    return is_loading ? (
-        <ChunkLoader message={getLoadingMessage()} />
-    ) : (
+    return (
         <AuthLoadingWrapper>
             <ThemeProvider theme={is_dark_mode_on ? 'dark' : 'light'}>
                 <BlocklyLoading />
