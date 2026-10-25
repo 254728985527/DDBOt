@@ -100,7 +100,7 @@ const setLocalStorageToken = async (
 
 export const AuthWrapper = () => {
     const [isAuthComplete, setIsAuthComplete] = React.useState(false);
-    const { loginInfo, paramsToDelete } = URLUtils.getLoginInfoFromURL();
+    const { loginInfo, paramsToDelete } = React.useMemo(() => URLUtils.getLoginInfoFromURL(), []);
     const { isOnline } = useOfflineDetection();
 
     React.useEffect(() => {
