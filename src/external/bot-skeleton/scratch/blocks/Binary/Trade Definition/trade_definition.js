@@ -18,7 +18,7 @@ window.Blockly.Blocks.trade_definition = {
     },
     definition() {
         return {
-            message0: '%1 %2 %3 %4',
+            message0: '%1 %2 %3 %4 %5 %6 %7 %8 %9',
             message1: '%1',
             message2: '%1 %2 %3',
             message3: '%1',
@@ -41,12 +41,12 @@ window.Blockly.Blocks.trade_definition = {
                 {
                     type: 'input_dummy',
                 },
-                {
+                ...[1, 2, 3, 4, 5].map(rank => ({
                     type: 'field_label',
-                    name: 'QUALIFIED_MARKETS_LABEL',
+                    name: `QUALIFIED_MARKET_${rank}`,
                     text: '',
-                    class: 'trade-parameters-qualified-markets',
-                },
+                    class: `trade-parameters-qualified-market trade-parameters-qualified-market-${rank}`,
+                })),
             ],
             args1: [
                 {

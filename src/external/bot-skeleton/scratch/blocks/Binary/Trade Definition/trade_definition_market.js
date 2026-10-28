@@ -86,18 +86,18 @@ window.Blockly.Blocks.trade_definition_market = {
     },
     updateQualifiedMarkets() {
         const root = this.getRootBlock?.();
-        const label = root?.getField?.('QUALIFIED_MARKETS_LABEL');
-        if (!label) return;
+        const labels = [1, 2, 3, 4, 5].map(rank => root?.getField?.(`QUALIFIED_MARKET_${rank}`));
+        if (labels.some(label => !label)) return;
 
         const pool_enabled = this.getFieldValue('POOL_ENABLED') === 'TRUE';
         if (!pool_enabled) {
-            label.setValue('');
+            labels.forEach(label => label.setValue(''));
             return;
         }
 
         const market_percentages = window.marketPercentages;
         if (!market_percentages || typeof market_percentages !== 'object') {
-            label.setValue('TOP 4 QUALIFIED MARKETS  |  Waiting for tick data…');
+            labels.forEach((label, index) => label.setValue(index === 0 ? 'TOP 4 QUALIFIED MARKETS' : ''));
             return;
         }
 
@@ -131,15 +131,15 @@ window.Blockly.Blocks.trade_definition_market = {
             .sort((left, right) => right.score - left.score)
             .slice(0, 4);
 
-        const text = ranked.length
-            ? `TOP 4 QUALIFIED MARKETS  ${ranked
-                  .map(
-                      (item, index) =>
-                          `${index + 1}. ${item.name} ${item.score.toFixed(0)}% (last ${Number.isFinite(item.last_digit) ? item.last_digit : '—'})`
-                  )
-                  .join('   ')}`
-            : `TOP 4 QUALIFIED MARKETS  |  None above ${threshold}% yet`;
-        label.setValue(text);
+        labels[0].setValue('TOP 4 QUALIFIED MARKETS');
+        labels.slice(1).forEach((label, index) => {
+            const item = ranked[index];
+            label.setValue(
+                item
+                    ? `${index + 1}. ${item.name} ${item.score.toFixed(0)}% | last ${Number.isFinite(item.last_digit) ? item.last_digit : '—'}`
+                    : ''
+            );
+        });
     },
     onchange(event) {
         const allowed_events = ['BLOCK_CREATE', 'BLOCK_CHANGE', 'BLOCK_DRAG'];
