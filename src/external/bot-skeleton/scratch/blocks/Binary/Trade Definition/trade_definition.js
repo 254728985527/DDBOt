@@ -18,7 +18,7 @@ window.Blockly.Blocks.trade_definition = {
     },
     definition() {
         return {
-            message0: '%1 %2 %3',
+            message0: '%1 %2 %3 %4',
             message1: '%1',
             message2: '%1 %2 %3',
             message3: '%1',
