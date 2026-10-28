@@ -41,6 +41,12 @@ window.Blockly.Blocks.trade_definition = {
                 {
                     type: 'input_dummy',
                 },
+                {
+                    type: 'field_label',
+                    name: 'QUALIFIED_MARKETS_LABEL',
+                    text: '',
+                    class: 'trade-parameters-qualified-markets',
+                },
             ],
             args1: [
                 {

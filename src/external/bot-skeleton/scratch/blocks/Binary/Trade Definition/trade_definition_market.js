@@ -84,6 +84,63 @@ window.Blockly.Blocks.trade_definition_market = {
         excludeOptionFromContextMenu(menu, menu_items);
         modifyContextMenu(menu);
     },
+    updateQualifiedMarkets() {
+        const root = this.getRootBlock?.();
+        const label = root?.getField?.('QUALIFIED_MARKETS_LABEL');
+        if (!label) return;
+
+        const pool_enabled = this.getFieldValue('POOL_ENABLED') === 'TRUE';
+        if (!pool_enabled) {
+            label.setValue('');
+            return;
+        }
+
+        const market_percentages = window.marketPercentages;
+        if (!market_percentages || typeof market_percentages !== 'object') {
+            label.setValue('TOP 4 QUALIFIED MARKETS  |  Waiting for tick data…');
+            return;
+        }
+
+        const active_symbols = ApiHelpers?.instance?.active_symbols;
+        const symbol_names = new Map(
+            (active_symbols?.active_symbols || []).map(symbol => [symbol.symbol, symbol.display_name || symbol.symbol])
+        );
+        const threshold = Number(this.getFieldValue('QUALIFYING_THRESHOLD') || 10);
+        const ranked = Object.entries(market_percentages)
+            .map(([symbol, metrics]) => {
+                const values =
+                    typeof metrics === 'number'
+                        ? [metrics]
+                        : [
+                              metrics?.lastDigit ?? metrics?.last_digit,
+                              metrics?.directional ?? metrics?.direction,
+                              metrics?.botVariable ?? metrics?.bot_variable ?? metrics?.percentage,
+                          ];
+                const percentages = values.map(Number).filter(Number.isFinite);
+                const score = percentages.length
+                    ? percentages.reduce((sum, value) => sum + value, 0) / percentages.length
+                    : 0;
+                return {
+                    symbol,
+                    name: symbol_names.get(symbol) || symbol,
+                    score,
+                    last_digit: Number(metrics?.lastDigit ?? metrics?.last_digit ?? metrics?.last_digit_value),
+                };
+            })
+            .filter(item => item.score >= threshold)
+            .sort((left, right) => right.score - left.score)
+            .slice(0, 4);
+
+        const text = ranked.length
+            ? `TOP 4 QUALIFIED MARKETS  ${ranked
+                  .map(
+                      (item, index) =>
+                          `${index + 1}. ${item.name} ${item.score.toFixed(0)}% (last ${Number.isFinite(item.last_digit) ? item.last_digit : '—'})`
+                  )
+                  .join('   ')}`
+            : `TOP 4 QUALIFIED MARKETS  |  None above ${threshold}% yet`;
+        label.setValue(text);
+    },
     onchange(event) {
         const allowed_events = ['BLOCK_CREATE', 'BLOCK_CHANGE', 'BLOCK_DRAG'];
         const is_allowed_event =
@@ -101,6 +158,7 @@ window.Blockly.Blocks.trade_definition_market = {
         this.enforceLimitations();
 
         const { active_symbols } = ApiHelpers?.instance ?? {};
+        this.updateQualifiedMarkets();
         if (!active_symbols) return;
 
         const target_digit = this.getField('TARGET_DIGIT')?.getValue();
